@@ -2,6 +2,7 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
@@ -33,6 +34,13 @@ checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
         discriminator_optimizer=discriminator_optimizer,
         generator=generator,
         discriminator=discriminator)
+
+### Check if the checkpoint dir is empty, if not restore checkpoint ###
+if(len(os.listdir(checkpoint_dir)) != 0):
+    print('[*] Restoring last checkpoint ...')
+    checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+else:
+    print('[*] No checkpoints found ...')
 
 ### Define the training step ###
 '''
@@ -81,7 +89,6 @@ def generate_image(model, epoch, test_input):
         plt.axis('off')
 
     plt.savefig(image_dir + '/image_at_epoch_{:04d}.png'.format(epoch))
-    plt.show()
 
 ### Prepare the dataset ###
 (train_images, train_labels), (_,_)  = tf.keras.datasets.mnist.load_data()
