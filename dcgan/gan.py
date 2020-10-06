@@ -90,6 +90,9 @@ def generate_image(model, epoch, test_input):
 
     plt.savefig(image_dir + '/image_at_epoch_{:04d}.png'.format(epoch))
 
+    ### Closes all created fig ###
+    plt.close('all')
+
 ### Prepare the dataset ###
 (train_images, train_labels), (_,_)  = tf.keras.datasets.mnist.load_data()
 train_images = train_images.reshape(train_images.shape[0], 28, 28, 1)
