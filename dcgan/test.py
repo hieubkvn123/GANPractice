@@ -45,7 +45,7 @@ while(choice == 'y'):
     generated_img = generated_img * 127.5 + 127.5
 
     fig, ax = plt.subplots(4,4, figsize=(4,4))
-    for i in range(generated_image.shape[0]):
+    for i in range(generated_img.shape[0]):
         img = generated_img[i, :, :, 0]
         row_id = i // 4
         col_id = i % 4
