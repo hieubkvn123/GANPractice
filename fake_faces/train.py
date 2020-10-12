@@ -38,7 +38,13 @@ discriminator_opt = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, amsgrad=True)
 
 ### Create checkpoint ###
 image_dir = './images'
+weights_dir = './weights'
 checkpoint_dir = './checkpoints'
+
+### Create if not exists ###
+if(not os.path.exists(weights_dir)): os.mkdir(weights_dir)
+if(not os.path.exists(checkpoint_dir)): os.mkdir(checkpoint_dir)
+
 checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
 checkpoint = tf.train.Checkpoint(generator=generator,
         discriminator=discriminator,
@@ -117,11 +123,11 @@ def train(images, epochs):
         start = time.time()
         num_batches = images.shape[0] // BATCH_SIZE
 
-        print('[*] Epoch %4d : ' % (epoch + 1))
+        print('[*] [Epoch %05d/%05d] : ' % (epoch + 1, epochs))
         for i in range(num_batches):
             image_batch = images[i*BATCH_SIZE:(i+1)*BATCH_SIZE]
             loss = train_step(image_batch)
-            print('   ---> Finished processing batch %3d, loss : %.4f' % (i+1, loss))
+            print('   ---> Finished processing batch %03d/%03d, loss : %.4f' % (i+1, num_batches, loss))
         print('[*] Time taken : %.2f seconds' % (time.time() - start))
 
         ### produce image for GIF as we go ###
