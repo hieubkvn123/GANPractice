@@ -138,7 +138,7 @@ def train(images, epochs):
         if((epoch + 1) % 15 == 0):
             print('[*] Saving models weights and making checkpoints ... ')
             checkpoint.save(file_prefix=checkpoint_prefix)
-            generator.save_weights('weights/generator.weights/hdf5')
+            generator.save_weights('weights/generator.weights.hdf5')
             discriminator.save_weights('weights/discriminator.weights.hdf5')
 
     generate_gif(gifs)
