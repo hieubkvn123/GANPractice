@@ -1,4 +1,8 @@
-dcgan/checkpoint/ckpt*
-fake_faces/checkpoint/ckpt*
+dcgan/checkpoints/ckpt*
+fake_faces/checkpoints/ckpt*
 dcgan/weights/*.hdf5
 fake_faces/weights/*.hdf5
+fake_faces/images/*.png
+fake_faces/images/*.gif
+dcgan/images/*.png
+dcgan/images/*.gif
