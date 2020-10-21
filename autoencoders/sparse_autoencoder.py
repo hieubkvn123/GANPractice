@@ -8,10 +8,12 @@ from tensorflow.keras import optimizers
 from tensorflow.keras import backend as K
 
 class SparseAutoencoder():
-    def __init__(self, input_shape=(28,28,1),lambda=0.001, sparsity=0.01, beta=3, encoding_dim=200):
+    def __init__(self, input_shape=(28,28,1),lambda_=0.001, sparsity=0.01, beta=3, encoding_dim=200):
         self.input_shape = input_shape
+        self.encoding_dim = encoding_dim
+
         self.p = sparsity
-        self.lambda = lambda
+        self.lambda_ = lambda_
         self.beta = beta
 
     ### Take the activation of the hidden layer ###
@@ -19,7 +21,7 @@ class SparseAutoencoder():
     ### and the sparsity parameter ###
     def kld_regularizer(self, activated_mat):
         p_hat = K.mean(activated_mat)
-        KLD = p * K.log(p/p_hat) + (1 - p) * K.log((1-p) / (1 - p_hat))
+        KLD = self.p * K.log(self.p/p_hat) + (1 - self.p) * K.log((1-self.p) / (1 - p_hat))
 
         return self.beta * K.sum(KLD)
 
@@ -27,11 +29,11 @@ class SparseAutoencoder():
         inputs = Input(shape=self.input_shape)
         encoded = Dense(self.encoding_dim, activation='sigmoid',
                 activity_regularizer=self.kld_regularizer, ### Applied on the activation ###
-                kernel_regularizer=regularizers.l2(self.lambda/2)(inputs) ### Applied on the parameters ###
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(inputs) ### Applied on the parameters ###
 
         decoded = Dense(self.input_shape[0] * self.input_shape[1], activation='sigmoid',
                 activity_regularizer=self.kld_regularizer, 
-                kernel_regularizer=regularizers.l2(self.lambda/2)(encoded)
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
 
 
         autoencoder = Model(inputs, decoded)

@@ -6,3 +6,4 @@ fake_faces/images/*.png
 fake_faces/images/*.gif
 dcgan/images/*.png
 dcgan/images/*.gif
+autoencoders/checkpoints/*.hdf5
