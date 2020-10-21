@@ -46,7 +46,11 @@ callbacks = [
     ModelCheckpoint(MODEL_CHECKPOINT, save_best_only=True, verbose=1)
 ]
 
-autoencoder.fit(x=train_images, y=train_images, batch_size=BATCH_SIZE, epochs=EPOCHS, callbacks=callbacks)
+autoencoder.fit(x=train_images, y=train_images, 
+        batch_size=BATCH_SIZE, 
+        epochs=EPOCHS, 
+        callbacks=callbacks, 
+        validation_split=0.3333)
 
 ### Saving weights of encoder and decoder ###
 encoder.save_weights(ENCODER_CKPT)
