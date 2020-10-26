@@ -18,14 +18,14 @@ IMG_DIR = 'reconstructed'
 ### and output reconstructed images ###
 
 net = SparseAutoencoder()
-autoencoder, encoder, decoder = net.get_model()
+autoencoder, encoder, decoder = net.build()
 autoencoder.load_weights(AUTOENCODER_CKPT)
-encoder = Model(autoencoder.inputs, autoencoder.layers[-3].output)
+encoder.load_weights(ENCODER_CKPT)
 # encoder.load_weights(ENCODER_CKPT)
 
 (train_images, train_labels), (_,_)  = tf.keras.datasets.mnist.load_data()
 train_images = train_images.reshape(train_images.shape[0], 28, 28, 1)
-train_images = (train_images - 127.5)/127.5 ### Normalize image to [-1,1]
+train_images = train_images.astype("float32")/255.0 ### Normalize image to [-1,1]
 
 test_images = np.array([])
 test_labels = np.array([])
@@ -68,6 +68,7 @@ def pca(x, n_components=3):
 
 ### Visualize the encodings in a 3D scatter ###
 encodings = encoder.predict(test_images)
+print(encodings.shape)
 pca_enc = pca(encodings) 
 
 fig = plt.figure()
@@ -81,7 +82,7 @@ fig.savefig("encodings.png")
 
 ### Visualize the reconstructed inputs ###
 reconstructed = autoencoder.predict(test_images)
-reconstructed = reconstructed * 127.5 + 127.5
+reconstructed = reconstructed * 255.0
 reconstructed = reconstructed.astype(np.uint8)
 
 if(not os.path.exists(IMG_DIR)):

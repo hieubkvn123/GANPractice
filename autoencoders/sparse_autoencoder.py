@@ -8,13 +8,14 @@ from tensorflow.keras import optimizers
 from tensorflow.keras import backend as K
 
 class SparseAutoencoder():
-    def __init__(self, input_shape=(28,28,1),lambda_=0.001, sparsity=0.01, beta=3, encoding_dim=200):
+    def __init__(self, input_shape=(28,28,1),lambda_=0.001, sparsity=0.01, beta=3, encoding_dim=16):
         self.input_shape = input_shape
         self.encoding_dim = encoding_dim
 
         self.p = sparsity
         self.lambda_ = lambda_
         self.beta = beta
+        self.filters = (32, 64)
 
     ### Take the activation of the hidden layer ###
     ### Then regularize it using Kullback Leiber Divergence with the average of the batch sample
@@ -25,36 +26,47 @@ class SparseAutoencoder():
 
         return self.beta * K.sum(KLD)
 
-    def get_model(self):
+
+    def build(self):
+        ### Building the encoder ###
         inputs = Input(shape=self.input_shape)
-        x = Flatten()(inputs) # has to flatten the input first
-        encoded = Dense(self.encoding_dim, activation='sigmoid',
-                activity_regularizer=self.kld_regularizer, ### Applied on the activation ###
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(x) ### Applied on the parameters ###
+        x = inputs 
 
-        encoded = Dense(128, activation='sigmoid',
-                activity_regularizer=self.kld_regularizer,
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
+        for f in self.filters:
+            x = Conv2D(f, kernel_size=(3,3), strides=2, padding='same')(x)
+            x = LeakyReLU(alpha=0.2)(x)
 
-        decoded = Dense(128, activation='sigmoid',
-                activity_regularizer=self.kld_regularizer,
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
+            ### Normalize along the channels axis ###
+            x = BatchNormalization(axis=-1)(x)
 
-        decoded = Dense(self.input_shape[0] * self.input_shape[1], activation='sigmoid',
-                activity_regularizer=self.kld_regularizer, 
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(decoded)
+        volumeSize = K.int_shape(x) ### Get shape to reshape later in decoder ###
+        x = Flatten()(x)
+        latent = Dense(self.encoding_dim, 
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(x)
 
-        decoded = Reshape((self.input_shape), input_shape=(self.input_shape[0]*self.input_shape[1],))(decoded)
+        encoder = Model(inputs, latent, name='encoder')
 
-        autoencoder = Model(inputs, decoded)
-        encoder = Model(inputs, encoded)
-        
-        encoded_inputs = Input(shape=(self.encoding_dim,))
-        decoder_output = autoencoder.layers[-2](encoded_inputs)
-        decoder_output = autoencoder.layers[-1](decoder_output)
-        decoder = Model(encoded_inputs, decoder_output)
+        ### Building the decoder ###
+        latentInputs = Input(shape=(self.encoding_dim,))
+        x = Dense(np.prod(volumeSize[1:]),
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(latentInputs)
+        x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
 
-        adam = optimizers.Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, amsgrad=True)
+        for f in self.filters[::-1]:
+            x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
+            x = LeakyReLU(alpha=0.2)(x)
+            x = BatchNormalization(axis=-1)(x)
+
+        x = Conv2DTranspose(self.input_shape[-1], kernel_size=(3,3), padding='same')(x)
+        outputs = Activation("sigmoid")(x)
+
+        decoder = Model(latentInputs, outputs, name='decoder')
+
+        ### Building the autoencoder ###
+        autoencoder = Model(inputs, decoder(encoder(inputs)), name='autoencoder')
+
+        adam = optimizers.Adam(lr=1e-4)
         autoencoder.compile(optimizer=adam, loss='mse')
 
         return autoencoder, encoder, decoder
+
