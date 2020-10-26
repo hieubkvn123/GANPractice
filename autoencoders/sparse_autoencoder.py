@@ -27,20 +27,31 @@ class SparseAutoencoder():
 
     def get_model(self):
         inputs = Input(shape=self.input_shape)
+        x = Flatten()(inputs) # has to flatten the input first
         encoded = Dense(self.encoding_dim, activation='sigmoid',
                 activity_regularizer=self.kld_regularizer, ### Applied on the activation ###
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(inputs) ### Applied on the parameters ###
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(x) ### Applied on the parameters ###
+
+        encoded = Dense(128, activation='sigmoid',
+                activity_regularizer=self.kld_regularizer,
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
+
+        decoded = Dense(128, activation='sigmoid',
+                activity_regularizer=self.kld_regularizer,
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
 
         decoded = Dense(self.input_shape[0] * self.input_shape[1], activation='sigmoid',
                 activity_regularizer=self.kld_regularizer, 
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(encoded)
+                kernel_regularizer=regularizers.l2(self.lambda_/2))(decoded)
 
+        decoded = Reshape((self.input_shape), input_shape=(self.input_shape[0]*self.input_shape[1],))(decoded)
 
         autoencoder = Model(inputs, decoded)
         encoder = Model(inputs, encoded)
         
         encoded_inputs = Input(shape=(self.encoding_dim,))
-        decoder_output = autoencoder.layers[-1](encoded_inputs)
+        decoder_output = autoencoder.layers[-2](encoded_inputs)
+        decoder_output = autoencoder.layers[-1](decoder_output)
         decoder = Model(encoded_inputs, decoder_output)
 
         adam = optimizers.Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, amsgrad=True)
