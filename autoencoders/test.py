@@ -78,6 +78,7 @@ for label in np.unique(test_labels):
     cluster = pca_enc[test_labels == label]
     ax.scatter3D(cluster[:,0], cluster[:,1], cluster[:,2], label=label)
 
+ax.set_title('Image encodings reduced using PCA')
 fig.savefig("encodings.png")
 
 ### Visualize the reconstructed inputs ###
@@ -89,13 +90,26 @@ if(not os.path.exists(IMG_DIR)):
     print('[*] Creating reconstructed input image directory ...')
     os.mkdir(IMG_DIR)
 
-for label in np.unique(test_labels):
+
+### Create 2 plots, one for original, one for recontructed ###
+fig1, axes1 = plt.subplots(4,3, figsize=(6,6))
+fig2, axes2 = plt.subplots(4,3, figsize=(6,6))
+
+for i, label in enumerate(np.unique(test_labels)):
     if(not os.path.exists('{}/{}'.format(IMG_DIR, label))):
         print('[*] Creating reconstructed dir for label {}'.format(label))
         os.mkdir('{}/{}'.format(IMG_DIR, label))
 
+    original = test_images[test_labels == label]
     cluster = reconstructed[test_labels == label]
+
+    random_index = np.random.randint(0, cluster.shape[0]) 
+    axes1[i//3][i%3].imshow(cluster[random_index])
+    axes2[i//3][i%3].imshow(original[random_index])
     
     for i, image in enumerate(cluster):
         cv2.imwrite('{}/{}/{}.png'.format(IMG_DIR, label, i), image)
 
+fig1.suptitle('Reconstructed inputs')
+fig2.suptitle('Original inputs')
+plt.show()
