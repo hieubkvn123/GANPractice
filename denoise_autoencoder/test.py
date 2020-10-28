@@ -17,7 +17,7 @@ X_test = pickle.load(open(TEST_PICKLE, 'rb'))
 np.random.shuffle(X_test)
 test_image = X_test[0]
 
-reconstructed = model.predict(test_image)
+reconstructed = autoencoder.predict(test_image)
 reconstructed = reconstructed * 255.0
 reconstructed = reconstructed.astype(np.uint8)
 
