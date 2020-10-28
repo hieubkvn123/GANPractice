@@ -16,9 +16,11 @@ print(autoencoder.summary())
 X_test = pickle.load(open(TEST_PICKLE, 'rb'))
 np.random.shuffle(X_test)
 test_image = X_test[0]
+print(test_image.shape)
 H, W, C = test_image.shape
 
-reconstructed = autoencoder.predict(cv2.resize(test_image, (128, 128)))
+test_image = cv2.resize(test_image, (128,128))
+reconstructed = autoencoder.predict(np.array([test_image]))[0]
 reconstructed = reconstructed * 255.0
 reconstructed = reconstructed.astype(np.uint8)
 reconstructed = cv2.resize(reconstructed, (W, H))
