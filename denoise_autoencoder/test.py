@@ -16,10 +16,12 @@ print(autoencoder.summary())
 X_test = pickle.load(open(TEST_PICKLE, 'rb'))
 np.random.shuffle(X_test)
 test_image = X_test[0]
+H, W, C = test_image.shape
 
-reconstructed = autoencoder.predict(test_image)
+reconstructed = autoencoder.predict(cv2.resize(test_image, (128, 128)))
 reconstructed = reconstructed * 255.0
 reconstructed = reconstructed.astype(np.uint8)
+reconstructed = cv2.resize(reconstructed, (W, H))
 
 cv2.imshow('Original', test_image)
 cv2.imshow('Denoised', reconstructed)
