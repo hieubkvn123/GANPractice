@@ -1,6 +1,6 @@
 import cv2
 import pickle
-import numpy 
+import numpy as np 
 
 from denoise_autoencoder import DenoiseAutoencoder
 
