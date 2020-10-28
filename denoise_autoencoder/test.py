@@ -14,7 +14,7 @@ autoencoder.load_weights(MODEL_CHECKPOINT)
 print(autoencoder.summary())
 
 X_test = pickle.load(open(TEST_PICKLE, 'rb'))
-np.shuffle(X_test)
+np.random.shuffle(X_test)
 test_image = X_test[0]
 
 reconstructed = model.predict(test_image)
