@@ -8,3 +8,4 @@ dcgan/images/*.png
 dcgan/images/*.gif
 autoencoders/checkpoints/*.hdf5
 denoise_autoencoder/data/*.pickle
+denoise_autoencoder/checkpoints/*.hdf5

@@ -9,7 +9,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras import backend as K
 
 class DenoiseAutoencoder():
-    def __init__(self, input_shape=(128, 128, 1), encoding_dim=32, lambda_=1e-4):
+    def __init__(self, input_shape=(128, 128, 3), encoding_dim=32, lambda_=1e-4):
         self.input_shape = input_shape
         self.filters = (16, 32, 64) 
         self.encoding_dim = encoding_dim

@@ -35,6 +35,7 @@ def data_from_dir(data_dir, num_train, preprocessing=[awgn, speckle],
             counter += 1
             abs_path = os.path.join(dir_, file_)
             image = cv2.imread(abs_path)
+            image = cv2.resize(image, (input_shape[0], input_shape[1]))
             label = image
 
             for prep in  preprocessing:
