@@ -13,6 +13,7 @@ class DenoiseAutoencoder():
         self.input_shape = input_shape
         self.filters = (16, 32, 64) 
         self.encoding_dim = encoding_dim
+        self.lambda_ = lambda_
 
     def awgn(self, image):
         ### Create random gaussian noise matrix ###
@@ -38,7 +39,7 @@ class DenoiseAutoencoder():
 
         volumeSize = K.int_shape(x)
         x = Flatten()(x)
-        latent = Dense(self.encoding_dimi, 
+        latent = Dense(self.encoding_dim, 
                 kernel_regularizer=regularizers.l2(self.lambda_/2))(x)
 
         encoder = Model(inputs, latent, name='encoder')

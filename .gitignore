@@ -7,3 +7,4 @@ fake_faces/images/*.gif
 dcgan/images/*.png
 dcgan/images/*.gif
 autoencoders/checkpoints/*.hdf5
+denoise_autoencoder/data/*.pickle
