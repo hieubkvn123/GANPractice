@@ -21,8 +21,7 @@ H, W, C = test_image.shape
 
 test_image = cv2.resize(test_image, (128,128))
 reconstructed = autoencoder.predict(np.array([test_image]))[0]
-reconstructed = reconstructed * 255.0
-reconstructed = reconstructed.astype(np.uint8)
+reconstructed = reconstructed.astype(np.float32)
 reconstructed = cv2.resize(reconstructed, (W, H))
 
 cv2.imshow('Original', test_image)
