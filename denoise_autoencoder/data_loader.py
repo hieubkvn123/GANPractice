@@ -42,10 +42,10 @@ def data_from_dir(data_dir, num_train, preprocessing=[awgn, speckle],
                 train_images.append(noisy)
                 train_labels.append(label)
 
-            print('[*] Processing image : {}'.format(abs_path))
+            print('[*] Processing image [{:06d}/{:06d}] : {}'.format(counter, num_train,abs_path))
 
-            if(counter >= num_train):
-                break
+        if(counter >= num_train):
+            break
 
     train_images = np.array(train_images)
     train_labels = np.array(train_labels)
