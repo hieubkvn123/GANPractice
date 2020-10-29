@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras import optimizers
 from tensorflow.keras import backend as K
 
@@ -28,45 +29,33 @@ class SparseAutoencoder():
 
 
     def build(self):
-        ### Building the encoder ###
-        inputs = Input(shape=self.input_shape)
-        x = inputs 
+        ### Build the encoder ###
+        x = Input(shape=self.input_shape)
+        
+        # Encoder
+        e_conv1 = Conv2D(64, (3, 3), activation='relu', padding='same', 
+                kernel_regularizer=l2(self.lambda_/2))(x)
+        pool1 = MaxPooling2D((2, 2), padding='same')(e_conv1)
+        batchnorm_1 = BatchNormalization()(pool1)
+        
+        e_conv2 = Conv2D(32, (3, 3), activation='relu', padding='same',
+                kernel_regularizer=l2(self.lambda_/2))(batchnorm_1)
+        h = MaxPooling2D((2, 2), padding='same')(e_conv2)
 
-        for f in self.filters:
-            x = Conv2D(f, kernel_size=(3,3), strides=2, padding='same')(x)
-            x = LeakyReLU(alpha=0.2)(x)
 
-            ### Normalize along the channels axis ###
-            x = BatchNormalization(axis=-1)(x)
+        # Decoder
+        d_conv1 = Conv2D(64, (3, 3), activation='relu', padding='same',
+                kernel_regularizer=l2(self.lambda_/2))(h)
+        up1 = UpSampling2D((2, 2))(d_conv1)
+        
+        d_conv2 = Conv2D(32, (3, 3), activation='relu', padding='same',
+                kernel_regularizer=l2(self.lambda_/2))(up1)
+        up2 = UpSampling2D((2, 2))(d_conv2)
+        
+        ### One last Conv to restore original depth of image ###
+        r = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(up2)
 
-        volumeSize = K.int_shape(x) ### Get shape to reshape later in decoder ###
-        x = Flatten()(x)
-        latent = Dense(self.encoding_dim, 
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(x)
+        model = Model(x, r)
+        model.compile(optimizer='adam', loss='mse')
 
-        encoder = Model(inputs, latent, name='encoder')
-
-        ### Building the decoder ###
-        latentInputs = Input(shape=(self.encoding_dim,))
-        x = Dense(np.prod(volumeSize[1:]),
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(latentInputs)
-        x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
-
-        for f in self.filters[::-1]:
-            x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
-            x = LeakyReLU(alpha=0.2)(x)
-            x = BatchNormalization(axis=-1)(x)
-
-        x = Conv2DTranspose(self.input_shape[-1], kernel_size=(3,3), padding='same')(x)
-        outputs = Activation("sigmoid")(x)
-
-        decoder = Model(latentInputs, outputs, name='decoder')
-
-        ### Building the autoencoder ###
-        autoencoder = Model(inputs, decoder(encoder(inputs)), name='autoencoder')
-
-        adam = optimizers.Adam(lr=1e-4)
-        autoencoder.compile(optimizer=adam, loss='mse')
-
-        return autoencoder, encoder, decoder
-
+        return model #autoencoder, encoder, decoder

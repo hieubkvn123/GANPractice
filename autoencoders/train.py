@@ -26,9 +26,9 @@ ENCODING_DIM=int(args['encoding_dim'])
 
 PATIENCE=15
 LOG_FILE='training.log.csv'
-MODEL_CHECKPOINT='checkpoints/sparse_autoencoder.weights.hdf5'
-ENCODER_CKPT='checkpoints/sparse_encoder.weights.hdf5'
-DECODER_CKPT='checkpoints/sparse_decoder.weights.hdf5'
+MODEL_CHECKPOINT='checkpoints/sparse_autoencoder_1.weights.hdf5'
+#ENCODER_CKPT='checkpoints/sparse_encoder.weights.hdf5'
+#DECODER_CKPT='checkpoints/sparse_decoder.weights.hdf5'
 
 ### Prepare the dataset ###
 (train_images, train_labels), (_,_)  = tf.keras.datasets.mnist.load_data()
@@ -40,7 +40,7 @@ sparse_ae = SparseAutoencoder(lambda_=LAMBDA,
                               beta=BETA,
                               encoding_dim=ENCODING_DIM)
 
-autoencoder, encoder, decoder = sparse_ae.build()
+autoencoder = sparse_ae.build()
 callbacks = [
     EarlyStopping(patience=PATIENCE, verbose=1),
     CSVLogger(LOG_FILE),
@@ -51,8 +51,8 @@ if(os.path.exists(MODEL_CHECKPOINT)):
     print('[*] Transfer learning from checkpoint ... ')
     autoencoder.load_weights(MODEL_CHECKPOINT)
 
-print(encoder.summary())
-print(decoder.summary())
+#print(encoder.summary())
+#print(decoder.summary())
 print(autoencoder.summary())
 
 autoencoder.fit(x=train_images, y=train_images, 
@@ -62,6 +62,6 @@ autoencoder.fit(x=train_images, y=train_images,
         validation_split=0.3333)
 
 ### Saving weights of encoder and decoder ###
-encoder.save_weights(ENCODER_CKPT)
-decoder.save_weights(DECODER_CKPT)
+#encoder.save_weights(ENCODER_CKPT)
+#decoder.save_weights(DECODER_CKPT)
 
