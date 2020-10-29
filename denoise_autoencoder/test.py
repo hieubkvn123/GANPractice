@@ -18,7 +18,7 @@ np.random.shuffle(X_test)
 test_image = np.array([X_test[0]])
 test_image = test_image / 255.0
 test_image = test_image.astype('float32')
-H, W, C = test_image.shape
+H, W, C = test_image[0].shape
 
 test_image = cv2.resize(test_image, (128,128))
 reconstructed = autoencoder.predict(test_image)[0]
