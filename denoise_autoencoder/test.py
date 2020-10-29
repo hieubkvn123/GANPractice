@@ -16,7 +16,8 @@ print(autoencoder.summary())
 X_test = pickle.load(open(TEST_PICKLE, 'rb'))
 np.random.shuffle(X_test)
 test_image = X_test[0]
-print(test_image.shape)
+test_image /= 255.0
+test_image = test_image.astype('float32')
 H, W, C = test_image.shape
 
 test_image = cv2.resize(test_image, (128,128))
