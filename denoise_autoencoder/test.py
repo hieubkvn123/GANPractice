@@ -27,7 +27,8 @@ test_image = test_image.astype('float32')
 
 reconstructed = autoencoder.predict(test_image)[0]
 reconstructed = reconstructed.astype(np.float32)
-reconstructed = cv2.resize(reconstructed, (W, H))
+#reconstructed = cv2.resize(reconstructed, (W, H))
+reconstructed = reconstructed.astype('float32')
 
 cv2.imshow('Original', original)
 cv2.imshow('Denoised', reconstructed)
