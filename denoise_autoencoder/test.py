@@ -7,7 +7,7 @@ from denoise_autoencoder import DenoiseAutoencoder
 MODEL_CHECKPOINT = 'checkpoints/autoencoder.weights.hdf5'
 TEST_PICKLE = 'data/X_test.pickle'
 net = DenoiseAutoencoder()
-autoencoder, encoder, decoder = net.build()
+autoencoder = net.build()
 
 print('[*] Loading model ... ')
 autoencoder.load_weights(MODEL_CHECKPOINT)
