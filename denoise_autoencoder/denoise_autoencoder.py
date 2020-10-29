@@ -33,7 +33,7 @@ class DenoiseAutoencoder():
         x = inputs
 
         for f in self.filters:
-            x = Conv2D(f, kernel_size=(3,3), padding='same', strides=2)(x)
+            x = Conv2D(f, kernel_size=(3,3), padding='same', strides=2, activation='relu')(x)
             x = LeakyReLU(alpha=0.2)(x)
             x = BatchNormalization()(x)
 
@@ -52,15 +52,15 @@ class DenoiseAutoencoder():
         x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
 
         for f in self.filters[::-1]:
-            x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
+            #x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
+            x = UpSampling2D((2,2))(x)
             x = LeakyReLU(alpha=0.2)(x)
             x = BatchNormalization()(x)
 
         ### A final Conv2DTranspose to get back the original channels ###
-        x = Conv2DTranspose(self.input_shape[-1], kernel_size=(3,3), padding='same')(x)
-        outputs = Activation("sigmoid")(x)
+        x = Conv2D(self.input_shape[-1], kernel_size=(3,3), padding='same', activation='sigmoid')(x)
 
-        decoder = Model(latentInputs, outputs, name='decoder')
+        decoder = Model(latentInputs, x, name='decoder')
 
         ### Build the autoencoder ###
         autoencoder = Model(inputs, decoder(encoder(inputs)), name='autoencoder')
