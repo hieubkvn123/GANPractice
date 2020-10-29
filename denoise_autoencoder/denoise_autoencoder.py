@@ -51,7 +51,7 @@ class DenoiseAutoencoder():
         ### With this x becomes a 2D tensor ###
         x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
 
-        for f in self.filters:
+        for f in self.filters[::-1]:
             x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
             x = LeakyReLU(alpha=0.2)(x)
             x = BatchNormalization()(x)
