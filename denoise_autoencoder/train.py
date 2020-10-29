@@ -29,7 +29,7 @@ BATCH_SIZE = int(args['batch_size'])
 NUM_TRAIN = int(args['num_train'])
 
 net = DenoiseAutoencoder()
-autoencoder, encoder, decoder = net.build()
+autoencoder = net.build()
 
 print(autoencoder.summary())
 

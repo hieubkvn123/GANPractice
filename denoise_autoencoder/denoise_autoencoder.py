@@ -29,42 +29,29 @@ class DenoiseAutoencoder():
 
     def build(self):
         ### Build the encoder ###
-        inputs = Input(shape=self.input_shape)
-        x = inputs
+        x = Input(shape=self.input_shape)
+        
+        # Encoder
+        e_conv1 = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        pool1 = MaxPooling2D((2, 2), padding='same')(e_conv1)
+        batchnorm_1 = BatchNormalization()(pool1)
+        e_conv2 = Conv2D(32, (3, 3), activation='relu', padding='same')(batchnorm_1)
+        pool2 = MaxPooling2D((2, 2), padding='same')(e_conv2)
+        batchnorm_2 = BatchNormalization()(pool2)
+        e_conv3 = Conv2D(16, (3, 3), activation='relu', padding='same')(batchnorm_2)
+        h = MaxPooling2D((2, 2), padding='same')(e_conv3)
 
-        for f in self.filters:
-            x = Conv2D(f, kernel_size=(3,3), padding='same', strides=2, activation='relu')(x)
-            x = LeakyReLU(alpha=0.2)(x)
-            x = BatchNormalization()(x)
 
-        volumeSize = K.int_shape(x)
-        x = Flatten()(x)
-        latent = Dense(self.encoding_dim, 
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(x)
+        # Decoder
+        d_conv1 = Conv2D(64, (3, 3), activation='relu', padding='same')(h)
+        up1 = UpSampling2D((2, 2))(d_conv1)
+        d_conv2 = Conv2D(32, (3, 3), activation='relu', padding='same')(up1)
+        up2 = UpSampling2D((2, 2))(d_conv2)
+        d_conv3 = Conv2D(16, (3, 3), activation='relu', padding='same')(up2)
+        up3 = UpSampling2D((2, 2))(d_conv3)
+        r = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(up3)
 
-        encoder = Model(inputs, latent, name='encoder')
+        model = Model(x, r)
+        model.compile(optimizer='adam', loss='mse')
 
-        ### Build the decoder ###
-        latentInputs = Input(shape=(self.encoding_dim,))
-        x = Dense(np.prod(volumeSize[1:]), 
-                kernel_regularizer=regularizers.l2(self.lambda_/2))(latentInputs)
-        ### With this x becomes a 2D tensor ###
-        x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
-
-        for f in self.filters[::-1]:
-            #x = Conv2DTranspose(f, kernel_size=(3,3), strides=2, padding='same')(x)
-            x = UpSampling2D((2,2))(x)
-            x = LeakyReLU(alpha=0.2)(x)
-            x = BatchNormalization()(x)
-
-        ### A final Conv2DTranspose to get back the original channels ###
-        x = Conv2D(self.input_shape[-1], kernel_size=(3,3), padding='same', activation='sigmoid')(x)
-
-        decoder = Model(latentInputs, x, name='decoder')
-
-        ### Build the autoencoder ###
-        autoencoder = Model(inputs, decoder(encoder(inputs)), name='autoencoder')
-        adam = optimizers.Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, amsgrad=True)
-        autoencoder.compile(optimizer=adam, loss='mse')
-
-        return autoencoder, encoder, decoder
+        return model #autoencoder, encoder, decoder
