@@ -8,7 +8,7 @@ from sparse_autoencoder import SparseAutoencoder
 from sklearn.decomposition import PCA
 from tensorflow.keras.models import Model
 
-AUTOENCODER_CKPT = 'checkpoints/sparse_autoencoder.weights.hdf5'
+AUTOENCODER_CKPT = 'checkpoints/sparse_autoencoder_1.weights.hdf5'
 DECODER_CKPT = 'checkpoints/sparse_decoder.weights.hdf5'
 ENCODER_CKPT = 'checkpoints/sparse_encoder.weights.hdf5'
 NUM_IM_PER_CLASS = 20
