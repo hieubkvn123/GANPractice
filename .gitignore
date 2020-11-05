@@ -9,3 +9,5 @@ dcgan/images/*.gif
 autoencoders/checkpoints/*.hdf5
 denoise_autoencoder/data/*.pickle
 denoise_autoencoder/checkpoints/*.hdf5
+contractive_autoencoder/data/*.pickle
+contractive_autoencoder/checkpoints/*.hdf5
