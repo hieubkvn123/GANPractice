@@ -2,7 +2,7 @@ import cv2
 import pickle
 import numpy as np 
 
-from denoise_autoencoder import DenoiseAutoencoder
+from model import DenoiseAutoencoder
 
 MODEL_CHECKPOINT = 'checkpoints/autoencoder.weights.hdf5'
 TEST_PICKLE = 'data/X_test.pickle'
