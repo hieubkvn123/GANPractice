@@ -50,6 +50,7 @@ else:
 
 print("[*] Number of training images : {}, full shape : {}".format(X_train.shape[0], str(X_train.shape)))
 print("[*] Number of testing images  : {}, full shape : {}".format(X_test.shape[0], str(X_test.shape)))
+print("[*] Training labels shape : {}".format(Y_train.shape))
 
 ### Normalize images to [0,1] range ###
 X_train = (X_train[:NUM_TRAIN]/255.0).astype('float32')
