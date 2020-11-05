@@ -73,7 +73,7 @@ callbacks = [
 
 if(len(os.listdir(CKPT_DIR)) > 0):
     print('[*] Loading checkpoint ...')
-    autoencoder.load_weights(os.path.join(CKPT_DIR, 'autoencoder.weights.hdf5'))
+    model.load_weights(os.path.join(CKPT_DIR, 'autoencoder.weights.hdf5'))
 
 
 model.fit(X_train, Y_train, 
