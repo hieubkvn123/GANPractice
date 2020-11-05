@@ -29,7 +29,14 @@ BATCH_SIZE = int(args['batch_size'])
 NUM_TRAIN = int(args['num_train'])
 
 autoencoder = ContractiveAutoencoder()
-model = autoencoder.build()
+model = autoencoder.build() ### Normal strategy with 1 gpu ###
+
+### IMPORTANT : How to train with multi-gpu ###
+num_gpus = len(tf.config.experimental.list_physical_devices('GPU'))
+if(num_gpus > 1):
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        model = autoencoder.build()
 
 print(model.summary())
 
