@@ -78,13 +78,13 @@ if(len(os.listdir(CKPT_DIR)) > 0):
 
 Y = {
     'decoded' : Y_train,
-    'encoded' : np.ones(Y_train.shape[0], 128)
+    'encoded' : np.ones((Y_train.shape[0], 128))
 }
 
 
 Y_ = {
     'decoded' : Y_test,
-    'encoded' : np.ones(Y_test.shape[0], 128)
+    'encoded' : np.ones((Y_test.shape[0], 128))
 }
 
 losses = {
