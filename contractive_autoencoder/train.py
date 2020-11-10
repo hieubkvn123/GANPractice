@@ -34,6 +34,7 @@ model = autoencoder.build() ### Normal strategy with 1 gpu ###
 ### IMPORTANT : How to train with multi-gpu ###
 num_gpus = len(tf.config.experimental.list_physical_devices('GPU'))
 if(num_gpus > 1):
+    print('[*] Training in Multi-GPU mode ... ')
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
         model = autoencoder.build()
