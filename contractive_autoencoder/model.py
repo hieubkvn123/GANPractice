@@ -21,10 +21,9 @@ class ContractiveAutoencoder:
 
         contractive = (h * (1 - h)) @ K.transpose(W)
 
-        loss = tf.keras.losses.mean_squared_error(y_true, y_pred)
-        loss = loss + self.lambda_ * K.sum(contractive ** 2)
+        loss = self.lambda_ * K.sum(contractive ** 2)
 
-        tf.print("Loss = " + str(loss))
+        # tf.print("Loss = " + str(loss))
 
         return loss
 
@@ -52,7 +51,7 @@ class ContractiveAutoencoder:
         conv4 = Conv2D(8, (3,3), activation='relu', padding='same')(norm3) 
        
         flatten = Flatten()(conv4)
-        h = Dense(128, activation='sigmoid', name='encoder')(flatten)
+        h = Dense(128, activation='sigmoid', name='encoded')(flatten)
         dense1 = Dense(8 * 16 * 16, activation='relu')(h)
 
         reshape = Reshape(target_shape=(16,16,8))(dense1)
@@ -75,10 +74,10 @@ class ContractiveAutoencoder:
         up4 = UpSampling2D((2,2))(conv4) ### shape = (16, 256, 256) ###
 
         ''' Final conv to restore original image depth '''
-        output = Conv2D(self.input_shape[-1], (3,3), activation='sigmoid', padding='same')(up4)
+        output = Conv2D(self.input_shape[-1], (3,3), activation='sigmoid', padding='same', name='decoded')(up4)
 
         ### We nned the weights of the model ###
-        self.model = Model(inputs, output)
+        self.model = Model(inputs, [output, h])
         self.model.compile(optimizer='adam', loss=self.contractive_loss)
 
         return self.model

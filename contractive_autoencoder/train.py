@@ -76,9 +76,26 @@ if(len(os.listdir(CKPT_DIR)) > 0):
     print('[*] Loading checkpoint ...')
     model.load_weights(os.path.join(CKPT_DIR, 'autoencoder.weights.hdf5'))
 
+Y = {
+    'decoded' : Y_train,
+    'encoded' : np.ones(Y_train.shape[0], 128)
+}
 
-model.fit(X_train, Y_train, 
-        validation_data=(X_test, Y_test),
+
+Y_ = {
+    'decoded' : Y_test,
+    'encoded' : np.ones(Y_test.shape[0], 128)
+}
+
+losses = {
+    'encoded' : model.contractive_loss,
+    'decoded' : tf.nn.mean_squared_error
+}
+
+model.compile(optimizer='adam', loss=losses)
+
+model.fit(X_train, Y, 
+        validation_data=(X_test, Y_),
         callbacks=callbacks,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE)
