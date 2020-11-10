@@ -89,7 +89,7 @@ Y_ = {
 
 losses = {
     'encoded' : autoencoder.contractive_loss,
-    'decoded' : tf.nn.mean_squared_error
+    'decoded' : tf.keras.losses.mean_squared_error
 }
 
 model.compile(optimizer='adam', loss=losses)
