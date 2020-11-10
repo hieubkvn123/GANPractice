@@ -13,7 +13,7 @@ class ContractiveAutoencoder:
         self.lambda_ = lambda_
 
     ### MSE + Jacobian of encoder layer penalty ###
-    def contractive_loss(self):
+    def contractive_loss(self, y_true, y_pred):
         h = self.model.get_layer('encoder').output
         W = self.model.get_layer('encoder').weights
 
