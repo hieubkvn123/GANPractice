@@ -15,16 +15,17 @@ class ContractiveAutoencoder:
     ### MSE + Jacobian of encoder layer penalty ###
     @tf.function
     def contractive_loss(self, y_true, y_pred):
-        with tf.init_scope():
-            h = self.model.get_layer('encoder').output
-            W = self.model.get_layer('encoder').weights[0]
+        h = self.model.get_layer('encoder').output
+        W = self.model.get_layer('encoder').weights[0]
 
-            # tf.print(h.shape, W.shape)
+        # tf.print(h.shape, W.shape)
 
-            contractive = (h * (1 - h)) @ K.transpose(W)
+        contractive = (h * (1 - h)) @ K.transpose(W)
 
-            loss = tf.keras.losses.mean_squared_error(y_true, y_pred)
-            loss = loss + self.lambda_ * K.sum(contractive ** 2)
+        loss = tf.keras.losses.mean_squared_error(y_true, y_pred)
+        loss = loss + self.lambda_ * K.sum(contractive ** 2)
+
+        tf.print("Loss = " + str(loss))
 
         return loss
 
