@@ -88,7 +88,7 @@ Y_ = {
 }
 
 losses = {
-    'encoded' : model.contractive_loss,
+    'encoded' : autoencoder.contractive_loss,
     'decoded' : tf.nn.mean_squared_error
 }
 
