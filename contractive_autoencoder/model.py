@@ -15,7 +15,7 @@ class ContractiveAutoencoder:
     ### MSE + Jacobian of encoder layer penalty ###
     def contractive_loss(self, y_true, y_pred):
         h = self.model.get_layer('encoder').output
-        W = tf.Variable(value=self.model.get_layer('encoder').weights[0])
+        W = K.variable(value=self.model.get_layer('encoder').weights[0])
 
         # tf.print(h.shape, W.shape)
 
