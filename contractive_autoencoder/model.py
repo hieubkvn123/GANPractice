@@ -4,12 +4,25 @@ import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
+from tensorflow.keras import backend as K
 
 class ContractiveAutoencoder:
     def __init__(self, input_shape=(128, 128, 3), encoding_dim=32, lambda_=1e-4):
         self.input_shape = input_shape
         self.encoding_dim = encoding_dim
-        self.lambda_ = lambda_ 
+        self.lambda_ = lambda_
+
+    ### MSE + Jacobian of encoder layer penalty ###
+    def contractive_loss(self):
+        h = self.model.get_layer('encoder').output
+        W = self.model.get_layer('encoder').weights
+
+        contractive = (h * (1 - h)) @ K.transpose(W)
+
+        loss = tf.keras.losses.mean_squared_error(y_true, y_pred)
+        loss = loss + self.lambda_ * K.sum(contractive ** 2)
+
+        return loss
 
     def build(self):
         inputs = Input(shape=self.input_shape)
@@ -32,13 +45,17 @@ class ContractiveAutoencoder:
 
         ''' Final conv to get latent space representation '''
         ### Latent space representation shape = (8, 16, 16) ###
-        h = Conv2D(8, (3,3), activation='relu', padding='same',
-                kernel_regularizer=l2(self.lambda_/2))(norm3) 
-        
+        conv4 = Conv2D(8, (3,3), activation='relu', padding='same')(norm3) 
+       
+        flatten = Flatten()(conv4)
+        h = Dense(128, activation='sigmoid', name='encoder')(flatten)
+        dense1 = Dense(8 * 16 * 16, activation='relu')(h)
+
+        reshape = Reshape(target_shape=(8,16,16))(dense1)
 
         ### Building the decoder ###
         ''' First upsampling '''
-        conv1 = Conv2D(64, (3,3), activation='relu', padding='same')(h)
+        conv1 = Conv2D(64, (3,3), activation='relu', padding='same')(reshape)
         up1 = UpSampling2D((2,2))(conv1) ### shape = (64, 32, 32) ###
 
         ''' Second upsampling '''
@@ -56,7 +73,8 @@ class ContractiveAutoencoder:
         ''' Final conv to restore original image depth '''
         output = Conv2D(self.input_shape[-1], (3,3), activation='sigmoid', padding='same')(up4)
 
-        model = Model(inputs, output)
-        model.compile(optimizer='adam', loss='mse')
+        ### We nned the weights of the model ###
+        self.model = Model(inputs, output)
+        self.model.compile(optimizer='adam', loss=self.contractive_loss)
 
-        return model
+        return self.model
