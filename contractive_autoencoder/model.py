@@ -53,7 +53,7 @@ class ContractiveAutoencoder:
         h = Dense(128, activation='sigmoid', name='encoder')(flatten)
         dense1 = Dense(8 * 16 * 16, activation='relu')(h)
 
-        reshape = Reshape(target_shape=(8,16,16))(dense1)
+        reshape = Reshape(target_shape=(16,16,8))(dense1)
 
         ### Building the decoder ###
         ''' First upsampling '''
