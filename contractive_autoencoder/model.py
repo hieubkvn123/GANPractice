@@ -17,6 +17,8 @@ class ContractiveAutoencoder:
         h = self.model.get_layer('encoder').output
         W = self.model.get_layer('encoder').weights
 
+        tf.print(h.shape, W.shape)
+
         contractive = (h * (1 - h)) @ K.transpose(W)
 
         loss = tf.keras.losses.mean_squared_error(y_true, y_pred)
