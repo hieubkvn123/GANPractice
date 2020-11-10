@@ -30,6 +30,7 @@ reconstructed = reconstructed.astype(np.float32)
 reconstructed = reconstructed.astype('float32')
 
 cv2.imshow('Original', original)
+print(reconstructed)
 cv2.imshow('Recontructed', reconstructed)
 
 key = cv2.waitKey(0)
