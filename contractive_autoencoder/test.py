@@ -25,7 +25,7 @@ test_image = np.array([test_image])
 test_image = test_image / 255.0
 test_image = test_image.astype('float32')
 
-reconstructed = autoencoder.predict(test_image)[0]
+reconstructed = autoencoder.predict(test_image)[0][0]
 reconstructed = reconstructed.astype(np.float32)
 reconstructed = reconstructed.astype('float32')
 
