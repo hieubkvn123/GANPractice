@@ -37,7 +37,7 @@ class VAE(object):
         z = Multiply()([z_sigma, z])
         z = Add(name='latent_input')([z, z_mu])
 
-        dense1 = Dense(7 * 7 * 16, activation='relu')(z)
+        dense1 = Dense(7 * 7 * 16, activation='relu', name='decoder_input')(z)
         reshape = Reshape(target_shape=(7,7,16))(dense1)
         
         ### Now tensor size = 14 x 14 x 16 ###

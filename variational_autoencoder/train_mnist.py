@@ -17,9 +17,15 @@ parser.add_argument('--batch_size', required=False, default=64,
         help='Number of training data to process at once')
 args = vars(parser.parse_args())
 
-CHK
+EPOCHS = int(args['epochs'])
+BATCH_SIZE = int(args['batch_size'])
+NUM_TRAIN = int(args['num_train'])
+MODEL_CHECKPOINT = args['checkpoint']
 
 net = VAE().build()
+
+if(os.path.exists(MODEL_CHECKPOINT)):
+    net.load_weights(MODEL_CHECKPOINT)
 
 ### Load dataset ###
 (X_train, Y_train), (X_test, Y_test) = tf.keras.datasets.mnist.load_data()
