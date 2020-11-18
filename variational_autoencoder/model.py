@@ -32,15 +32,16 @@ class VAE(object):
         z_sigma = Lambda(lambda x : K.exp(z_log_var) ** 0.5 )(z_log_var)
 
         ### Reparameterize : z = mu + sigma * epsilon ###
-        z = Input(tensor=K.random_normal(stddev=0.1, shape=(K.shape(z_mu)[0], self.latent_dim)))
+        ### eps ~ N(1, 0) ###
+        z = K.random_normal(stddev=1, mean=0, shape=(K.shape(z_mu)[0], self.latent_dim))
         z = Multiply()([z_sigma, z])
         z = Add(name='latent_input')([z, z_mu])
 
         dense1 = Dense(7 * 7 * 16, activation='relu')(z)
-        reshape = Reshape(shape=(7,7,16))(dense1)
+        reshape = Reshape(target_shape=(7,7,16))(dense1)
         
         ### Now tensor size = 14 x 14 x 16 ###
-        conv1 = Conv2D(16, kernel_size=(3,3), activtion='relu', padding='same')(reshape)
+        conv1 = Conv2D(16, kernel_size=(3,3), activation='relu', padding='same')(reshape)
         up1 = UpSampling2D((2,2))(conv1)
 
         ### Now tensor size = 28 x 28 x 8 ###
@@ -48,8 +49,8 @@ class VAE(object):
         up2 = UpSampling2D((2,2))(conv2)
 
         output = Conv2D(1, kernel_size=(3,3), activation='sigmoid', padding='same')(up2)
-        model = Model(inputs, (z_mu, z_log_var, output])
-        adam = optimzers.Adam(lr=1e-3, amsgrad=True)
+        model = Model(inputs, [z_mu, z_log_var, output])
+        adam = optimizers.Adam(lr=1e-3, amsgrad=True)
         model.compile(optimizer=adam, loss=self.loss_function)
 
         return model
@@ -57,6 +58,8 @@ class VAE(object):
     def loss_function(y_true, y_pred):
         mu, log_var, output = y_pred
 
+
+        ''' The formula is calculate KL divergence of two gaussian distributions '''
         kl_divergence = -0.5 * K.sum(1 + log_var -
                                     K.square(mu) - 
                                     K.exp(log_var), axis=-1)
