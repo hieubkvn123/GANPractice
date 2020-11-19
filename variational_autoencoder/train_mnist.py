@@ -15,14 +15,17 @@ parser.add_argument('--checkpoint', required=False, default='checkpoints/model.w
         help='Path the checkpoint file')
 parser.add_argument('--batch_size', required=False, default=64,
         help='Number of training data to process at once')
+parser.add_argument('--decoder_checkpoint', required=False, default='checkpoints/decoder.weights.hdf5',
+        help='Path to the decoder weights file')
 args = vars(parser.parse_args())
 
 EPOCHS = int(args['epochs'])
 BATCH_SIZE = int(args['batch_size'])
 NUM_TRAIN = int(args['num_train'])
 MODEL_CHECKPOINT = args['checkpoint']
+DECODER_CHECKPOINT = args['decoder_checkpoint']
 
-model= VAE().build()
+model, decoder = VAE().build()
 
 if(os.path.exists(MODEL_CHECKPOINT)):
     print('[*] Loading pretrained model ... ')
@@ -58,3 +61,5 @@ model.fit(X_train, Y,
         validation_data=(X_test, Y_),
         epochs=EPOCHS,
         batch_size=BATCH_SIZE)
+
+decoder.save_weights(DECODER_CHECKPOINT)

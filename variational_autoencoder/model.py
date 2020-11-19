@@ -72,7 +72,7 @@ class VAE(object):
         }
         model.compile(optimizer=adam, loss=losses)
 
-        return model
+        return model, decoder
 
     def kl_divergence_loss(self, y_true, y_pred):
         mu, log_var = tf.split(y_pred, num_or_size_splits=2, axis=1)
