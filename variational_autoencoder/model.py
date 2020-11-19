@@ -9,7 +9,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras import optimizers
 
 class VAE(object):
-    def __init__(self, latent_dim=256, input_shape=(28,28,1)):
+    def __init__(self, latent_dim=2, input_shape=(28,28,1)):
         self.latent_dim = latent_dim
         self.input_shape = input_shape
 
@@ -26,7 +26,7 @@ class VAE(object):
         conv2 = Conv2D(8, kernel_size=(3,3), activation='relu', padding='same')(up1)
         up2 = UpSampling2D((2,2))(conv2)
 
-        decoder_output = Conv2D(1, kernel_size=(3,3), activation='sigmoid', padding='same')(up2)
+        decoder_output = Conv2D(1, kernel_size=(3,3), padding='same')(up2)
         decoder = Model(decoder_input, decoder_output, name=name)
 
         return decoder 
@@ -45,8 +45,8 @@ class VAE(object):
         pool2 = MaxPooling2D(pool_size=(2,2))(norm2)
 
         flatten = Flatten()(pool2)
-        z_mu = Dense(self.latent_dim, activation='sigmoid', name='encoded_mean')(flatten)
-        z_log_var = Dense(self.latent_dim, activation='sigmoid', name='encoded_logvar')(flatten)
+        z_mu = Dense(self.latent_dim, name='encoded_mean')(flatten)
+        z_log_var = Dense(self.latent_dim, name='encoded_logvar')(flatten)
         z_sigma = Lambda(lambda x : K.exp(x) ** 0.5 )(z_log_var)
 
         ### Reparameterize : z = mu + sigma * epsilon ###

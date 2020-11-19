@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 
 parser = ArgumentParser()
-parser.add_argument('--num_train', required=False, default=10000, 
+parser.add_argument('--num_train', required=False, default=60000, 
         help='Number of training data to fit into the model')
 parser.add_argument('--epochs', required=False, default=1000,
         help='Number of training iterations')
@@ -56,10 +56,12 @@ Y_ = {
 }
 
 print(model.summary())
-model.fit(X_train, Y,
+try:
+    model.fit(X_train, Y,
         callbacks=callbacks,
         validation_data=(X_test, Y_),
         epochs=EPOCHS,
         batch_size=BATCH_SIZE)
-
-decoder.save_weights(DECODER_CHECKPOINT)
+except KeyboardInterrupt:
+    print('[*] Saving decoder ... ')
+    model.get_layer('decoder').save_weights(DECODER_CHECKPOINT)
