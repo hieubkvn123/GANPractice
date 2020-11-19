@@ -36,18 +36,18 @@ class VAE(object):
         
         ### Now tensor size = 14 x 14 x 8 ###
         conv1 = Conv2D(8, kernel_size=(3,3),  activation='relu', padding='same')(inputs)
-        norm1 = BatchNormalization()(conv1)
-        pool1 = MaxPooling2D(pool_size=(2,2))(norm1)
+        #norm1 = BatchNormalization()(conv1)
+        # pool1 = MaxPooling2D(pool_size=(2,2))(conv1)
 
         ### Now tensor size = 7 x 7 x 16 ###
-        conv2 = Conv2D(16, kernel_size=(3,3), activation='relu', padding='same')(pool1)
-        norm2 = BatchNormalization()(conv2)
-        pool2 = MaxPooling2D(pool_size=(2,2))(norm2)
+        conv2 = Conv2D(16, kernel_size=(3,3), activation='relu', padding='same')(conv1)
+        #norm2 = BatchNormalization()(conv2)
+        #pool2 = MaxPooling2D(pool_size=(2,2))(conv2)
 
-        flatten = Flatten()(pool2)
+        flatten = Flatten()(conv2)
         z_mu = Dense(self.latent_dim, name='encoded_mean')(flatten)
         z_log_var = Dense(self.latent_dim, name='encoded_logvar')(flatten)
-        z_sigma = Lambda(lambda x : K.exp(x) ** 0.5 )(z_log_var)
+        z_sigma = Lambda(lambda x : K.exp(x * .5))(z_log_var)
 
         ### Reparameterize : z = mu + sigma * epsilon ###
         ### eps ~ N(1, 0) ###
