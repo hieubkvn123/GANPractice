@@ -11,3 +11,6 @@ denoise_autoencoder/data/*.pickle
 denoise_autoencoder/checkpoints/*.hdf5
 contractive_autoencoder/data/*.pickle
 contractive_autoencoder/checkpoints/*.hdf5
+vae-gan/checkpoints/*.hdf5
+vae-gan/data/*.pickle
+vae-gan/data/*.tfrecord
