@@ -35,6 +35,7 @@ def kl_divergence(mu, logvar):
 def reconstruction_loss(l_tilde, l_real):
     # loss = tf.reduce_mean(tf.reduce_sum(tf.square(l_tilde - l_real), axis=[1,2,3]))
     loss = mean_squared_error(l_real, l_tilde)
+    loss = K.mean(loss)
 
     return loss
 
@@ -111,12 +112,17 @@ def train(dataset, steps_per_epoch=10, epochs=100):
         print('[*] EPOCH #%d' % (i+1))
         for j in range(steps_per_epoch):
             x_train, y_train = next(iter(dataset))
+            x_train = (x_train - 127.5) / 127.5
+    
             enc_loss, dec_loss, dis_loss = _train_step(x_train)
 
             print('[*] Batch #[%d/%d], enc loss = %.5f - dec loss = %.5f - dis loss = %.5f' % (j+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
 
         ### Predict one image to see the result ###
         sample_image = dec.predict(sample_vector)[0]
+        sample_image = sample_image * 127.5 + 127.5
+        sample_image = sample_image.astype('uint8')
+
         images.append(sample_image)
         _generate_gif(images)
 
@@ -142,5 +148,5 @@ batch_size = 64
 
 print('[INFO] Starting training ... ')
 dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
-steps_per_epoch = dataset_len // batch_size
+steps_per_epoch = 20 # dataset_len // batch_size
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
