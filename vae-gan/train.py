@@ -7,6 +7,7 @@ from models import VAE_GAN
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
+from tensorflow.keras.losses import mean_squared_error
 from dataset import write_to_tfrecord, read_from_tfrecord 
 
 ### Some constants ###
@@ -32,7 +33,9 @@ def kl_divergence(mu, logvar):
     return loss
 
 def reconstruction_loss(l_tilde, l_real):
-    loss = tf.reduce_mean(tf.reduce_sum(tf.square(l_tilde - l_real), axis=[1,2,3]))
+    # loss = tf.reduce_mean(tf.reduce_sum(tf.square(l_tilde - l_real), axis=[1,2,3]))
+    loss = mean_squared_error(l_real, l_tilde)
+
     return loss
 
 def d_loss(d_real, d_fake, d_tilde):
