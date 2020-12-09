@@ -1,10 +1,12 @@
 import os
+import imageio
 import numpy as np
 import tensorflow as tf
 
 from models import VAE_GAN
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import BinaryCrossentropy
 from dataset import write_to_tfrecord, read_from_tfrecord 
 
 ### Some constants ###
@@ -16,6 +18,7 @@ record_file = 'data/casia-webface_1000.tfrecord'
 vae_gan = VAE_GAN()
 vae_gan.build()
 
+bce = BinaryCrossentropy(from_logits=True)
 enc, dec, dis = vae_gan.get_models()
 enc_opt, dec_opt, dis_opt = Adam(1e-4), Adam(1e-4), Adam(1e-4)
 
@@ -34,13 +37,26 @@ def reconstruction_loss(l_tilde, l_real):
 
 def d_loss(d_real, d_fake, d_tilde):
     eps = 1e-8
-    loss = -tf.reduce_mean(tf.math.log(d_real+eps) + tf.math.log(1.0-d_fake+eps) + tf.math.log(1.0-d_tilde+eps))
+    # loss = -tf.reduce_mean(tf.math.log(d_real+eps) + tf.math.log(1.0-d_fake+eps) + tf.math.log(1.0-d_tilde+eps))
+    ones = tf.ones_like(d_real)
+    zeros = tf.zeros_like(d_real)
+
+    real_loss = bce(ones, d_real + eps)
+    fake_loss = bce(zeros, d_fake + eps)
+    tilde_loss = bce(zeros, d_tilde + eps)
+    loss = real_loss + fake_loss + tilde_loss
+    loss = K.mean(loss)
 
     return loss
 
 def g_loss(d_fake, d_tilde):
     eps = 1e-8
-    loss = -tf.reduce_mean(tf.math.log(d_tilde+eps) + tf.math.log(d_fake+eps))
+    # loss = -tf.reduce_mean(tf.math.log(d_tilde+eps) + tf.math.log(d_fake+eps))
+    ones = tf.ones_like(d_fake)
+    fake_loss = bce(ones, d_fake + eps)
+    tilde_loss = bce(ones, d_tilde + eps)
+    loss = fake_loss + tilde_loss 
+    loss = K.mean(loss)
 
     return loss
 
@@ -105,9 +121,9 @@ def train(dataset, steps_per_epoch=10, epochs=100):
         dataset = dataset.repeat()
         if(i % 15 == 0):
             print('[INFO] Creating checkpoints ... ')
-            enc.save_weights('enc.weights.hdf5')
-            dec.save_weights('dec.weights.hdf5')
-            dis.save_weights('dis.weights.hdf5')
+            enc.save_weights('checkpoints/enc.weights.hdf5')
+            dec.save_weights('checkpoints/dec.weights.hdf5')
+            dis.save_weights('checkpoints/dis.weights.hdf5')
 
         print('========================================================================================')
 
