@@ -79,23 +79,23 @@ class VAE_GAN(object):
 
         out = Conv2D(3, kernel_size=(5,5), padding='same', activation='tanh')(relu3)
 
-        model = Model(inputs=inputs, outputs=out)
+        model = Model(inputs=inputs, outputs=out, name='dec')
         return model
 
     def build_discriminator(self):
         inputs = Input(shape=self.input_shape)
 
-        conv1 = Conv2D(32, kernel_size=(5,5), activation='relu')(inputs)
+        conv1 = Conv2D(32, kernel_size=(5,5), activation='relu', strides=2)(inputs)
 
-        conv2 = Conv2D(128, kernel_size=(5,5))(conv1)
+        conv2 = Conv2D(128, kernel_size=(5,5), strides=2)(conv1)
         norm2 = BatchNormalization()(conv2)
         relu2 = LeakyReLU()(norm2)
 
-        conv3 = Conv2D(256, kernel_size=(5,5))(relu2)
+        conv3 = Conv2D(256, kernel_size=(5,5), strides=2)(relu2)
         norm3 = BatchNormalization()(conv3)
         relu3 = LeakyReLU()(norm3)
 
-        l_tilde = Conv2D(256, kernel_size=(5,5))(relu3)
+        l_tilde = Conv2D(256, kernel_size=(5,5), strides=2)(relu3)
         norm4 = BatchNormalization()(l_tilde)
         relu4 = LeakyReLU()(norm4)
 
@@ -105,7 +105,7 @@ class VAE_GAN(object):
 
         out = Dense(1)(relu5)
 
-        model = Model(inputs=inputs, outputs=[out, l_tilde])
+        model = Model(inputs=inputs, outputs=[out, l_tilde], name='dis')
         return model
 
     def get_models(self):
