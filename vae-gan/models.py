@@ -104,6 +104,7 @@ class VAE_GAN(object):
         relu5 = LeakyReLU()(norm5)
 
         out = Dense(1)(relu5)
+        out = tf.nn.sigmoid(out)
 
         model = Model(inputs=inputs, outputs=[out, l_tilde], name='dis')
         return model

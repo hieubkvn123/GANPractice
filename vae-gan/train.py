@@ -44,8 +44,14 @@ def g_loss(d_fake, d_tilde):
 
     return loss
 
+def _generate_gif(image_list):
+    with imageio.get_writer('output/output.gif', mode='I') as writer:
+        for image in image_list:
+            image = imageio.core.util.Array(image)
+            writer.append_data(image)
+
 @tf.function
-def train_step(images):
+def _train_step(images):
     with tf.GradientTape() as enc_tape, tf.GradientTape() as dec_tape, tf.GradientTape() as dis_tape:
         ### Output as a decoder ###
         mu, logvar, z_tilde = enc(images, training=True)
@@ -80,13 +86,20 @@ def train_step(images):
     return enc_loss, dec_loss, dis_loss
 
 def train(dataset, steps_per_epoch=10, epochs=100):
+    sample_vector = K.random_normal(mean=0, stddev=1.0, shape=(1, latent_dim))
+    images = []
     for i in range(epochs):
         print('[*] EPOCH #%d' % (i+1))
         for j in range(steps_per_epoch):
             x_train, y_train = next(iter(dataset))
-            enc_loss, dec_loss, dis_loss = train_step(x_train)
+            enc_loss, dec_loss, dis_loss = _train_step(x_train)
 
-            print('[*] Batch #[%d/%d], enc loss = %.5f - dec loss = %.5f - dis loss = %.5f' % (i+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
+            print('[*] Batch #[%d/%d], enc loss = %.5f - dec loss = %.5f - dis loss = %.5f' % (j+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
+
+        ### Predict one image to see the result ###
+        sample_image = dec.predict(sample_vector)[0]
+        images.append(sample_image)
+        _generate_gif(images)
 
         ### Repeat the dataset ###
         dataset = dataset.repeat()
@@ -95,6 +108,8 @@ def train(dataset, steps_per_epoch=10, epochs=100):
             enc.save_weights('enc.weights.hdf5')
             dec.save_weights('dec.weights.hdf5')
             dis.save_weights('dis.weights.hdf5')
+
+        print('========================================================================================')
 
 ### Loading data ###
 if(not os.path.exists(record_file)):
