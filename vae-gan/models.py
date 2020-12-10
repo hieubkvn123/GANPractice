@@ -8,7 +8,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import regularizers, optimizers
 
 class VAE_GAN(object):
-    def __init__(self, latent_dim=1024, input_shape=(128,128,3)):
+    def __init__(self, latent_dim=2, input_shape=(128,128,3)):
         self.latent_dim = latent_dim
         self.input_shape = input_shape
 
@@ -37,7 +37,7 @@ class VAE_GAN(object):
         conv3 = Conv2D(256, kernel_size=(5,5), strides=2, padding='same')(relu2)
         norm3 = BatchNormalization()(conv3)
         relu3 = LeakyReLU()(norm3)
-
+        
         flatten = Flatten()(relu3)
         dropout = Dropout(0.5)(flatten)
 
@@ -76,7 +76,6 @@ class VAE_GAN(object):
         conv3 = Conv2DTranspose(32, kernel_size=(5,5), strides=2, padding='same')(relu2)
         norm3 = BatchNormalization()(conv3)
         relu3 = LeakyReLU()(norm3)
-
         out = Conv2D(3, kernel_size=(5,5), padding='same', activation='tanh')(relu3)
 
         model = Model(inputs=inputs, outputs=out, name='dec')
@@ -99,7 +98,9 @@ class VAE_GAN(object):
         norm4 = BatchNormalization()(l_tilde)
         relu4 = LeakyReLU()(norm4)
 
-        dense = Dense(512)(relu4)
+        flatten = Flatten()(relu4)
+
+        dense = Dense(512)(flatten)
         norm5 = BatchNormalization()(dense)
         relu5 = LeakyReLU()(norm5)
 
@@ -110,6 +111,10 @@ class VAE_GAN(object):
         return model
 
     def get_models(self):
+        print(self.enc.summary())
+        print(self.dec.summary())
+        print(self.dis.summary())
+
         return self.enc, self.dec, self.dis
 
     def build(self):
@@ -131,4 +136,5 @@ class VAE_GAN(object):
         d_tilde, l_tilde = self.dis(x_tilde)
 
         vaegan = Model(inputs=inputs, outputs=[l_tilde, l_real, mu, logvar, d_real, d_fake, d_tilde])
+        
         return vaegan

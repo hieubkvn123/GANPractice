@@ -11,7 +11,7 @@ from tensorflow.keras.losses import mean_squared_error
 from dataset import write_to_tfrecord, read_from_tfrecord 
 
 ### Some constants ###
-latent_dim = 1024
+latent_dim = 2
 data_dir = '../../datasets/CASIA-WebFace'
 record_file = 'data/casia-webface_1000.tfrecord'
 
@@ -148,5 +148,5 @@ batch_size = 64
 
 print('[INFO] Starting training ... ')
 dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
-steps_per_epoch = 20 # dataset_len // batch_size
+steps_per_epoch = dataset_len // batch_size
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
