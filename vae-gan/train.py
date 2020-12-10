@@ -3,7 +3,8 @@ import imageio
 import numpy as np
 import tensorflow as tf
 
-from models import VAE_GAN
+# from models import VAE_GAN
+from models_mnist import VAE_GAN
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
@@ -25,17 +26,16 @@ enc_opt, dec_opt, dis_opt = Adam(1e-4), Adam(1e-4), Adam(1e-4)
 
 def kl_divergence(mu, logvar):
     ### Calculated from KL(N(mu, sigma), N(0,I)) ###
-    kl_batch = -0.5 * K.sum(1 + logvar - \
+    loss = -0.5 * K.sum(1 + logvar - \
                             K.square(mu) - \
                             K.exp(logvar), axis=-1)
-    loss = K.mean(kl_batch)
 
     return loss
 
 def reconstruction_loss(l_tilde, l_real):
     # loss = tf.reduce_mean(tf.reduce_sum(tf.square(l_tilde - l_real), axis=[1,2,3]))
     loss = mean_squared_error(l_real, l_tilde)
-    loss = K.mean(loss)
+    loss = K.sum(loss)
 
     return loss
 
@@ -49,7 +49,7 @@ def d_loss(d_real, d_fake, d_tilde):
     fake_loss = bce(zeros, d_fake + eps)
     tilde_loss = bce(zeros, d_tilde + eps)
     loss = real_loss + fake_loss + tilde_loss
-    loss = K.mean(loss)
+    loss = K.sum(loss)
 
     return loss
 
@@ -60,7 +60,7 @@ def g_loss(d_fake, d_tilde):
     fake_loss = bce(ones, d_fake + eps)
     tilde_loss = bce(ones, d_tilde + eps)
     loss = fake_loss + tilde_loss 
-    loss = K.mean(loss)
+    loss = K.sum(loss)
 
     return loss
 
@@ -111,11 +111,16 @@ def train(dataset, steps_per_epoch=10, epochs=100):
     for i in range(epochs):
         print('[*] EPOCH #%d' % (i+1))
         for j in range(steps_per_epoch):
-            x_train, y_train = next(iter(dataset))
+            #x_train, y_train = next(iter(dataset))
+            x_train = dataset[j*64:(j+1)*64]
             x_train = (x_train - 127.5) / 127.5
-    
+            x_train = tf.convert_to_tensor(x_train)
+            x_train = tf.image.grayscale_to_rgb(tf.expand_dims(x_train, axis=3))
+   
             enc_loss, dec_loss, dis_loss = _train_step(x_train)
-
+            enc_loss = K.sum(enc_loss)
+            dec_loss = K.sum(dec_loss)
+            dis_loss = K.sum(dis_loss)
             print('[*] Batch #[%d/%d], enc loss = %.5f - dec loss = %.5f - dis loss = %.5f' % (j+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
 
         ### Predict one image to see the result ###
@@ -127,7 +132,7 @@ def train(dataset, steps_per_epoch=10, epochs=100):
         _generate_gif(images)
 
         ### Repeat the dataset ###
-        dataset = dataset.repeat()
+        #dataset = dataset.repeat()
         if(i % 15 == 0):
             print('[INFO] Creating checkpoints ... ')
             enc.save_weights('checkpoints/enc.weights.hdf5')
@@ -147,6 +152,7 @@ epochs = 1000
 batch_size = 64
 
 print('[INFO] Starting training ... ')
-dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
-steps_per_epoch = dataset_len // batch_size
+# dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
+(dataset, _), (_,_) = tf.keras.datasets.mnist.load_data()
+steps_per_epoch = 600 # dataset_len // batch_size
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
