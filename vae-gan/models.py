@@ -26,17 +26,20 @@ class VAE_GAN(object):
     def build_encoder(self):
         inputs = Input(shape=self.input_shape)
 
+        ### 64 x 64 x 64 ###
         conv1 = Conv2D(64, kernel_size=(5,5), strides=2, padding='same')(inputs)
-        # norm1 = BatchNormalization()(conv1)
-        relu1 = LeakyReLU()(conv1)
+        norm1 = BatchNormalization()(conv1)
+        relu1 = LeakyReLU()(norm1)
 
+        ### 32 x 32 x 128 ###
         conv2 = Conv2D(128, kernel_size=(5,5), strides=2, padding='same')(relu1)
-        # norm2 = BatchNormalization()(conv2)
-        relu2 = LeakyReLU()(conv2)
+        norm2 = BatchNormalization()(conv2)
+        relu2 = LeakyReLU()(norm2)
 
-        conv3 = Conv2D(256, kernel_size=(5,5), strides=2, padding='same')(relu2)
-        # norm3 = BatchNormalization()(conv3)
-        relu3 = LeakyReLU()(conv3)
+        ### 16 x 16 x 64 ###
+        conv3 = Conv2D(64, kernel_size=(5,5), strides=2, padding='same')(relu2)
+        norm3 = BatchNormalization()(conv3)
+        relu3 = LeakyReLU()(norm3)
         
         flatten = Flatten()(relu3)
         dropout = Dropout(0.5)(flatten)
@@ -56,59 +59,48 @@ class VAE_GAN(object):
 
     def build_decoder(self):
         inputs = Input(shape=(self.latent_dim,))
-        dense = Dense(16*16*256)(inputs)
+        dense = Dense(16*16*64)(inputs)
         norm  = BatchNormalization()(dense)
         relu  = LeakyReLU()(norm)
 
-        reshape = Reshape(target_shape=(16, 16, 256))(relu)
+        reshape = Reshape(target_shape=(16, 16, 64))(relu)
 
-        ### 32 x 32 x 256 ###
-        conv1 = Conv2DTranspose(256, kernel_size=(5,5), strides=2, padding='same')(reshape)
-        # norm1 = BatchNormalization()(conv1)
-        relu1 = LeakyReLU()(conv1)
+        ### 16 x 16 x 128 ###
+        conv1 = Conv2DTranspose(128, kernel_size=(5,5), strides=(1,1), use_bias=False, padding='same')(reshape)
+        norm1 = BatchNormalization()(conv1)
+        relu1 = LeakyReLU()(norm1)
 
-        ### 64 x 64 x 128 ###
-        conv2 = Conv2DTranspose(128, kernel_size=(5,5), strides=2, padding='same')(relu1)
-        # norm2 = BatchNormalization()(conv2)
-        relu2 = LeakyReLU()(conv2)
+        ### 32 x 32 x 128 ###
+        conv2 = Conv2DTranspose(128, kernel_size=(5,5), strides=(2,2), use_bias=False, padding='same')(relu1)
+        norm2 = BatchNormalization()(conv2)
+        relu2 = LeakyReLU()(norm2)
+        
+        ### 64 x 64 x 64 ###
+        conv3 = Conv2DTranspose(64, kernel_size=(5,5), strides=(2,2), use_bias=False, padding='same')(relu2)
+        norm3 = BatchNormalization()(conv3)
+        relu3 = LeakyReLU()(norm3)
 
-        ### 128 x 128 x 32 ###
-        conv3 = Conv2DTranspose(32, kernel_size=(5,5), strides=2, padding='same')(relu2)
-        # norm3 = BatchNormalization()(conv3)
-        relu3 = LeakyReLU()(conv3)
-        out = Conv2D(3, kernel_size=(5,5), padding='same', activation='tanh')(relu3)
+        ### 128 x 128 x 3 ###
+        out = Conv2DTranspose(3, kernel_size=(5,5), strides=(2,2), use_bias=False, padding='same', activation='tanh')(relu3)
 
         model = Model(inputs=inputs, outputs=out, name='dec')
         return model
 
     def build_discriminator(self):
         inputs = Input(shape=self.input_shape)
+        x = Conv2D(64, kernel_size=(5,5), strides=(2,2), padding='same')(inputs)
+        x = LeakyReLU()(x)
+        x = Dropout(0.3)(x)
 
-        conv1 = Conv2D(32, kernel_size=(5,5), activation='relu', strides=2)(inputs)
+        l_tilde = Conv2D(128, kernel_size=(5,5), strides=(2,2), padding='same')(x)
+        x = LeakyReLU()(l_tilde)
+        x = Dropout(0.3)(x)
 
-        conv2 = Conv2D(128, kernel_size=(5,5), strides=2)(conv1)
-        # norm2 = BatchNormalization()(conv2)
-        relu2 = LeakyReLU()(conv2)
-
-        conv3 = Conv2D(256, kernel_size=(5,5), strides=2)(relu2)
-        # norm3 = BatchNormalization()(conv3)
-        relu3 = LeakyReLU()(conv3)
-
-        l_tilde = Conv2D(256, kernel_size=(5,5), strides=2)(relu3)
-        # norm4 = BatchNormalization()(l_tilde)
-        relu4 = LeakyReLU()(l_tilde)
-
-        flatten = Flatten()(relu4)
-
-        dense = Dense(512)(flatten)
-        # norm5 = BatchNormalization()(dense)
-        relu5 = LeakyReLU()(dense)
-
-        out = Dense(1)(relu5)
-        out = tf.nn.sigmoid(out)
-
-        model = Model(inputs=inputs, outputs=[out, l_tilde], name='dis')
-        return model
+        x = Flatten()(x)
+        x = Dense(1)(x)
+        
+        model = Model(inputs=inputs, outputs=[x, l_tilde])
+        return model 
 
     def get_models(self):
         print(self.enc.summary())

@@ -3,8 +3,8 @@ import imageio
 import numpy as np
 import tensorflow as tf
 
-# from models import VAE_GAN
-from models_mnist import VAE_GAN
+from models import VAE_GAN
+# from models_mnist import VAE_GAN
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import BinaryCrossentropy
@@ -111,11 +111,11 @@ def train(dataset, steps_per_epoch=10, epochs=100):
     for i in range(epochs):
         print('[*] EPOCH #%d' % (i+1))
         for j in range(steps_per_epoch):
-            #x_train, y_train = next(iter(dataset))
-            x_train = dataset[j*64:(j+1)*64]
+            x_train, y_train = next(iter(dataset))
+            # x_train = dataset[j*64:(j+1)*64]
             x_train = (x_train - 127.5) / 127.5
             x_train = tf.convert_to_tensor(x_train)
-            x_train = tf.image.grayscale_to_rgb(tf.expand_dims(x_train, axis=3))
+            # x_train = tf.image.grayscale_to_rgb(tf.expand_dims(x_train, axis=3))
    
             enc_loss, dec_loss, dis_loss = _train_step(x_train)
             enc_loss = K.mean(enc_loss)
@@ -156,15 +156,16 @@ epochs = 1000
 batch_size = 64
 
 print('[INFO] Starting training ... ')
-# dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
-(dataset, _), (_,_) = tf.keras.datasets.mnist.load_data()
-steps_per_epoch = 600 # dataset_len // batch_size
+dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
+# (dataset, _), (_,_) = tf.keras.datasets.mnist.load_data()
+steps_per_epoch = 60 # dataset_len // batch_size
 
-if(len(os.listdir('checkpoints/')) > 0):
+
+'''if(len(os.listdir('checkpoints/')) > 0):
     ### If checkpoint is not empty, load weights ###
     print('[INFO] Loading models weights from checkpoints ...')
     enc.load_weights('checkpoints/enc.weights.hdf5')
     dec.load_weights('checkpoints/dec.weights.hdf5')
-    dis.load_weights('checkpoints/dis.weights.hdf5')
+    dis.load_weights('checkpoints/dis.weights.hdf5') '''
 
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
