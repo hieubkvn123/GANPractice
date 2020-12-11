@@ -90,8 +90,8 @@ def _train_step(images):
         kl_loss = kl_divergence(mu, logvar)
 
         dis_loss = d_loss(d_real, d_fake, d_tilde)
-        dec_loss = g_loss(d_fake, d_tilde) + 0.2*(ll_loss/(8*8*256))
-        enc_loss = kl_loss + (ll_loss/(8*8*256))
+        dec_loss = g_loss(d_fake, d_tilde) + 0.5 * ll_loss
+        enc_loss = kl_loss + ll_loss
 
         ### Compute gradients ###
         g_enc = enc_tape.gradient(enc_loss, enc.trainable_variables)
@@ -118,10 +118,14 @@ def train(dataset, steps_per_epoch=10, epochs=100):
             x_train = tf.image.grayscale_to_rgb(tf.expand_dims(x_train, axis=3))
    
             enc_loss, dec_loss, dis_loss = _train_step(x_train)
-            enc_loss = K.sum(enc_loss)
-            dec_loss = K.sum(dec_loss)
-            dis_loss = K.sum(dis_loss)
-            print('[*] Batch #[%d/%d], enc loss = %.5f - dec loss = %.5f - dis loss = %.5f' % (j+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
+            enc_loss = K.mean(enc_loss)
+            dec_loss = K.mean(dec_loss)
+            dis_loss = K.mean(dis_loss)
+            print('[*] Epoch #[%d/%d] | Batch #[%d/%d], \
+                    enc loss = %.5f - \
+                    dec loss = %.5f - \
+                    dis loss = %.5f' % \
+                    (i+1, epochs, j+1, steps_per_epoch, enc_loss, dec_loss, dis_loss))
 
         ### Predict one image to see the result ###
         sample_image = dec.predict(sample_vector)[0]
@@ -155,4 +159,12 @@ print('[INFO] Starting training ... ')
 # dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
 (dataset, _), (_,_) = tf.keras.datasets.mnist.load_data()
 steps_per_epoch = 600 # dataset_len // batch_size
+
+if(len(os.listdir('checkpoints/')) > 0):
+    ### If checkpoint is not empty, load weights ###
+    print('[INFO] Loading models weights from checkpoints ...')
+    enc.load_weights('checkpoints/enc.weights.hdf5')
+    dec.load_weights('checkpoints/dec.weights.hdf5')
+    dis.load_weights('checkpoints/dis.weights.hdf5')
+
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
