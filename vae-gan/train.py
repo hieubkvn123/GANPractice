@@ -90,7 +90,7 @@ def _train_step(images):
         kl_loss = kl_divergence(mu, logvar)
 
         dis_loss = d_loss(d_real, d_fake, d_tilde)
-        dec_loss = g_loss(d_fake, d_tilde) + 0.5 * ll_loss
+        dec_loss = g_loss(d_fake, d_tilde) + 0.5 * ll_loss 
         enc_loss = kl_loss + ll_loss
 
         ### Compute gradients ###
@@ -161,11 +161,15 @@ dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
 steps_per_epoch = 60 # dataset_len // batch_size
 
 
-'''if(len(os.listdir('checkpoints/')) > 0):
+if(os.path.exists('checkpoints/enc.weights.hdf5') and  
+        os.path.exists('checkpoints/dec.weights.hdf5') and   
+        os.path.exists('checkpoints/dis.weights.hdf5')):
     ### If checkpoint is not empty, load weights ###
     print('[INFO] Loading models weights from checkpoints ...')
     enc.load_weights('checkpoints/enc.weights.hdf5')
     dec.load_weights('checkpoints/dec.weights.hdf5')
-    dis.load_weights('checkpoints/dis.weights.hdf5') '''
+    dis.load_weights('checkpoints/dis.weights.hdf5')
+else:
+    print('[INFO] Training from scratch ...')
 
 train(dataset, epochs=epochs, steps_per_epoch=steps_per_epoch)
