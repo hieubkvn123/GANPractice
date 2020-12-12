@@ -1,4 +1,5 @@
 import os
+import math
 import imageio
 import numpy as np
 import tensorflow as tf
@@ -13,6 +14,7 @@ from dataset import write_to_tfrecord, read_from_tfrecord
 
 ### Some constants ###
 latent_dim = 2
+gamma = 1e-6 # ratio of reconstruction to apply to decoder 
 data_dir = '../../datasets/CASIA-WebFace'
 record_file = 'data/casia-webface_1000.tfrecord'
 
@@ -33,9 +35,16 @@ def kl_divergence(mu, logvar):
     return loss
 
 def reconstruction_loss(l_tilde, l_real):
-    # loss = tf.reduce_mean(tf.reduce_sum(tf.square(l_tilde - l_real), axis=[1,2,3]))
+    '''
     loss = mean_squared_error(l_real, l_tilde)
     loss = K.sum(loss)
+    '''
+    ln_var = 0
+    x_prec = 1.0
+    x_diff = (l_real - l_tilde)
+    x_power = (x_diff * x_diff) * x_prec * -0.5
+    loss = (ln_var + math.log(2 * math.pi)) / 2 - x_power
+    loss = K.mean(loss)
 
     return loss
 
@@ -89,9 +98,9 @@ def _train_step(images):
         ll_loss = reconstruction_loss(l_tilde, l_real)
         kl_loss = kl_divergence(mu, logvar)
 
-        dis_loss = d_loss(d_real, d_fake, d_tilde)
-        dec_loss = g_loss(d_fake, d_tilde) + 0.5 * ll_loss 
-        enc_loss = kl_loss + ll_loss
+        dis_loss = K.mean(d_loss(d_real, d_fake, d_tilde))
+        dec_loss = K.mean(g_loss(d_fake, d_tilde)) + gamma * ll_loss 
+        enc_loss = K.mean(kl_loss + ll_loss)
 
         ### Compute gradients ###
         g_enc = enc_tape.gradient(enc_loss, enc.trainable_variables)
@@ -158,7 +167,7 @@ batch_size = 64
 print('[INFO] Starting training ... ')
 dataset_len, dataset = read_from_tfrecord(record_file, batch_size)
 # (dataset, _), (_,_) = tf.keras.datasets.mnist.load_data()
-steps_per_epoch = 60 # dataset_len // batch_size
+steps_per_epoch = dataset_len // batch_size
 
 
 if(os.path.exists('checkpoints/enc.weights.hdf5') and  
