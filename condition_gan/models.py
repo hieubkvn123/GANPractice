@@ -12,7 +12,7 @@ class ConditionalGAN(object):
         self.num_classes = num_classes
 
     def build_label_deconv(self):
-        labels = Input(self.num_classes,))
+        labels = Input(shape=(self.num_classes,))
         fc = Dense(7*7*16, activation='relu')(labels)
 
         reshape = Reshape(target_shape=(7,7,16))(fc)
@@ -49,7 +49,7 @@ class ConditionalGAN(object):
 
         out = Conv2D(1, kernel_size=(5,5), padding='same', strides=(1,1))(relu2)
 
-        generator = Model(inputs=[inputs, labels], outputs=out)
+        generator = Model(inputs=[inputs, labels], outputs=out, name='Generator')
         return generator
 
     def build_discriminator(self):
@@ -64,7 +64,13 @@ class ConditionalGAN(object):
         x = Dropout(0.3)(x)
 
         x = Flatten()(x)
-        x = Dense(1, activation='sigmoid')(x)
+        x = Dense(1)(x)
 
-        discriminator = Model(inputs=inputs, outputs=x)
+        discriminator = Model(inputs=inputs, outputs=x, name='Discriminator')
         return discriminator
+
+    def get_models(self):
+        self.D = self.build_discriminator()
+        self.G = self.build_generator()
+
+        return self.D, self.G
