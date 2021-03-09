@@ -22,6 +22,7 @@ from torchvision import transforms
 ### Some constants ###
 H, W, C = 256, 256, 3
 LATENT_DIM = 128
+MNIST=False
 
 
 # # Loading and processing data for training
@@ -84,17 +85,19 @@ class Discriminator(nn.Module):
         self.conv4 = nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1) # Size /8 = 32
         self.norm4 = nn.BatchNorm2d(256)
         self.fc    = nn.Linear(256*32*32, 1)
-        
+        self.sig   = nn.Sigmoid()
+
     def forward(self, inputs):
-        out = F.leaky_relu(self.conv1(inputs), 0.2)
-        out = F.leaky_relu(self.norm2(self.conv2(out)), 0.2)
-        out = F.leaky_relu(self.norm3(self.conv3(out)), 0.2)
-        out = F.leaky_relu(self.norm4(self.conv4(out)), 0.2)
+        out = F.leaky_relu(self.conv1(inputs), 0.2, inplace=True)
+        out = F.leaky_relu(self.norm2(self.conv2(out)), 0.2, inplace=True)
+        out = F.leaky_relu(self.norm3(self.conv3(out)), 0.2, inplace=True)
+        out = F.leaky_relu(self.norm4(self.conv4(out)), 0.2, inplace=True)
         
         # flatten
         out = out.view(-1, 256*32*32)
         out = self.fc(out)
-        
+        out = self.sig(out)
+
         return out
     
 D = Discriminator()
@@ -133,26 +136,16 @@ G = Generator()
 
 # In[67]:
 
-
-def weights_init_normal(m):
-    """
-    Applies initial weights to certain layers in a model .
-    The weights are taken from a normal distribution 
-    with mean = 0, std dev = 0.02.
-    :param m: A module or layer in a network    
-    """
-    # classname will be something like:
-    # `Conv`, `BatchNorm2d`, `Linear`, etc.
+def weights_init(m):
     classname = m.__class__.__name__
-    
-    # TODO: Apply initial weights to convolutional and linear layers
-    if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
-      init.normal_(m.weight.data, 0.0, 0.02)
-      if hasattr(m, 'bias') and m.bias is not None:
-                init.constant_(m.bias.data, 0.0)
+    if classname.find('Conv') != -1:
+        torch.nn.init.normal_(m.weight, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        torch.nn.init.normal_(m.weight, 1.0, 0.02)
+        torch.nn.init.zeros_(m.bias)
 
-D.apply(weights_init_normal)
-G.apply(weights_init_normal)
+D.apply(weights_init)
+G.apply(weights_init)
 
 
 # # Start training
@@ -173,7 +166,7 @@ d_optimizer = optim.Adam(D.parameters(), lr, [beta1, beta2])
 g_optimizer = optim.Adam(G.parameters(), lr, [beta1, beta2])
 
 # Create criterions for the discriminator D and generator G
-bce   = nn.BCEWithLogitsLoss()
+bce   = nn.BCELoss()
 zeros = torch.zeros(batch_size, 1)
 ones  = torch.ones(batch_size, 1) * 0.9 # smooth labels
 
@@ -210,7 +203,7 @@ if(torch.cuda.is_available()):
     zeros = zeros.cuda()
     ones = ones.cuda()
     
-sample_z = np.random.uniform(-1, 1, size=(16, LATENT_DIM))
+sample_z = np.random.normal(0, 1, size=(16, LATENT_DIM))
 sample_z = torch.from_numpy(sample_z).float()
 if(train_gpu) : sample_z = sample_z.cuda()
 sample_outputs = []
@@ -227,7 +220,7 @@ for epoch in range(epochs):
         real_images = scale(real_images)
         
         # Generate fake images
-        z = np.random.uniform(-1, 1, size=(batch_size, LATENT_DIM))
+        z = np.random.normal(0, 1, size=(batch_size, LATENT_DIM))
         z = torch.from_numpy(z).float()
         
         if(train_gpu):
@@ -249,7 +242,7 @@ for epoch in range(epochs):
         D.eval() # turn discriminator to evaluation mode
         G.train() # turn generator to training mode
         
-        z = np.random.uniform(-1, 1, size=(batch_size, LATENT_DIM))
+        z = np.random.normal(0, 1, size=(batch_size, LATENT_DIM))
         z = torch.from_numpy(z).float()
         
         if(train_gpu):
@@ -270,7 +263,7 @@ for epoch in range(epochs):
             sample_output = generate_img(G(sample_z))
             sample_outputs.append(sample_output)
             generate_gif(sample_outputs)
-            os.system('cls')
+            os.system('clear')
         
     mean_d_loss = np.array(d_losses).mean()
     mean_g_loss = np.array(g_losses).mean()
