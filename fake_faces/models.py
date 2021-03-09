@@ -21,15 +21,20 @@ def make_generator(input_shape=(100,)):
     x = BatchNormalization()(x)
     x = LeakyReLU()(x)
 
+    ### x = 64 x 64 x 64 ###
+    x = Conv2DTranspose(32, kernel_size=(5,5), strides=(2,2), padding='same', use_bias=False)(x)
+    x = BatchNormalization()(x)
+    x = LeakyReLU()(x)
+    
     ### x = 128 x 128 x 1 ###
-    x = Conv2DTranspose(1, kernel_size=(5,5), strides=(2,2), padding='same', use_bias=False, activation='tanh')(x)
+    x = Conv2DTranspose(3, kernel_size=(5,5), strides=(2,2), padding='same', use_bias=False, activation='tanh')(x)
 
     model = Model(inputs, x)
     return model
 
 ### Discriminator (The art critic) ###
 
-def make_discriminator(input_shape=(128,128,1)):
+def make_discriminator(input_shape=(256,256,3)):
     inputs = Input(shape=input_shape)
     x = Conv2D(64, kernel_size=(5,5), strides=(2,2), padding='same')(inputs)
     x = LeakyReLU()(x)
@@ -39,6 +44,10 @@ def make_discriminator(input_shape=(128,128,1)):
     x = LeakyReLU()(x)
     x = Dropout(0.3)(x)
 
+    x = Conv2D(128, kernel_size=(5,5), strides=(2,2), padding='same')(x)
+    x = LeakyReLU()(x)
+    x = Dropout(0.3)(x)
+    
     x = Flatten()(x)
     x = Dense(1)(x)
 
