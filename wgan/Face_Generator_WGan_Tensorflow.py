@@ -24,7 +24,7 @@ img_shape     = (112, 112, 3)
 latent_dim    = 100
 epochs        = 100
 batch_size    = 64
-learning_rate = 0.000002
+learning_rate = 0.0002
 beta_1        = 0.5
 n_critic      = 3
 d_weight_path = 'weights/d.weights.hdf5'
@@ -175,6 +175,7 @@ def train_step(images):
     '''
     for i in range(n_critic):
         with tf.GradientTape() as d_tape:
+            batch_size = K.shape(images[i])[0]
             noise = tf.random.normal([batch_size, latent_dim])
 
             gen_images = G(noise, training=True)
@@ -250,21 +251,26 @@ def train(dataset):
         G.load_weights(g_weight_path)
         
     for epoch in range(epochs):
-        print(f'Epoch #[{epoch}/{epochs}] : ')
+        print(f'Epoch #[{epoch+1}/{epochs}] : ')
         for i in range(dataset_size // (n_critic + 1)):
             batches = []
-            for j in range(n_critic+1):
+            for j in range(n_critic):
                 batchX, batchY = next(dataset)
                 batches.append(batchX)
             
             D_loss, G_loss = train_step(batches)
-            print(f'Batch #[{i+1}], D loss = {D_loss}, G loss = {G_loss}')
+            print(f'Epoch #{epoch+1} | Batch #[{i+1}], D loss = {D_loss}, G loss = {G_loss}')
             
-            if(((i + 1) % 15) == 0):
+            if(((i + 1) % 50) == 0):
                 print('    --> Generating gif ... ')
                 gen_image = generate_img(fixed_latent)
                 images.append(gen_image)
                 generate_gif(images)
+
+            if(((i + 1) % 100) == 0):
+                print('    --> Saving checkpoints ...')
+                G.save_weights(g_weight_path)
+                D.save_weights(d_weight_path)
 train(dataset)
 
 
