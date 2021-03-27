@@ -125,6 +125,7 @@ def loss_fn(y_true, y_pred):
     return tf.reduce_mean(y_true * y_pred)
 
 def gradient_penalty(sample_real, sample_fake, lambda_=5):    
+    batch_size = K.shape(sample_real)[0]
     with tf.GradientTape() as tape:
         # Get the interpolated image
         epsilon = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
