@@ -236,6 +236,11 @@ def generate_img(latent):
     return result
 
 def generate_gif(images):
+    ### Only taking 100 images per gif ###
+    if(len(images) > 100):
+        start = len(images) - 100
+        images = images[start:len(images)]
+
     with imageio.get_writer("images/output.gif", mode="I") as writer:
         for i, image in enumerate(images):
             # put frame number
@@ -273,17 +278,5 @@ def train(dataset):
                 G.save_weights(g_weight_path)
                 D.save_weights(d_weight_path)
 train(dataset)
-
-
-# In[ ]:
-
-
 G.save_weights(g_weight_path)
 D.save_weights(d_weight_path)
-
-
-# In[ ]:
-
-
-
-
