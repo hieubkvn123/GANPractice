@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # # Import libraries
-
-# In[90]:
-
-
 import os
 import tqdm
 import numpy as np
@@ -27,7 +20,7 @@ from tensorflow.keras.utils import Progbar
 ### Some constants ###
 lr = 1e-4
 batch_size = 1
-epochs = 5
+epochs = 15
 img_shape = (256, 256, 3)
 latent_dim = 100
 buffer_size = 1000
@@ -228,6 +221,14 @@ def train_step(X, Y):
     return total_loss_g, total_loss_f, total_loss_Dx, total_loss_Dy
     
 def train(datasetX, datasetY):
+    if(os.path.exists(g_weights_path) and os.path.exists(f_weights_path)
+            and os.path.exists(x_weights_path) and os.path.exists(y_weights_path)):
+        print('[INFO] Pretrained models exist, loading weights ... ')
+        D_x.load_weights(x_weights_path)
+        D_y.load_weights(y_weights_path)
+        G.load_weights(g_weights_path)
+        F.load_weights(f_weights_path)
+
     for i in range(epochs):
         print(f'Epoch {i+1}/{epochs}')
         batch_id = 0
