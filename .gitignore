@@ -15,5 +15,6 @@ vae-gan/checkpoints/*.hdf5
 vae-gan/data/*.pickle
 vae-gan/data/*.tfrecord
 vae-gan/output/*.jpg
+cycle_gan/weights/*.hdf5
 __pycache__/
 .ipynb_checkpoints/
