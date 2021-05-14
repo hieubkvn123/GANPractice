@@ -18,7 +18,7 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.utils import Progbar
 
 ### Some constants ###
-lr = 1e-4
+lr = 2e-4
 batch_size = 1
 epochs = 15
 img_shape = (256, 256, 3)
@@ -148,7 +148,7 @@ def discriminator_loss(D_real, D_fake):
     fake_loss = bce(zeros, D_fake)
     loss = real_loss + fake_loss
     
-    return loss
+    return loss * 0.5
 
 def cycle_consistency_loss(cycled_images, real_images):
     return LAMBDA * tf.reduce_mean(tf.abs(cycled_images - real_images))
@@ -163,10 +163,10 @@ def identity_loss(same_images, real_images):
 
 
 ### Preparing optimizers ###
-g_opt = Adam(lr=lr, beta_1=0.5, amsgrad=True)
-f_opt = Adam(lr=lr, beta_1=0.5, amsgrad=True)
-x_opt = Adam(lr=lr, beta_1=0.5, amsgrad=True)
-y_opt = Adam(lr=lr, beta_1=0.5, amsgrad=True)
+g_opt = Adam(lr=lr, beta_1=0.5)
+f_opt = Adam(lr=lr, beta_1=0.5)
+x_opt = Adam(lr=lr, beta_1=0.5)
+y_opt = Adam(lr=lr, beta_1=0.5)
 
 @tf.function
 def train_step(X, Y):
@@ -178,8 +178,8 @@ def train_step(X, Y):
         fake_x = F(Y, training=True)
         
         # For cycle consistency losses 
-        cycled_y = F(fake_y, training=True)
-        cycled_x = G(fake_x, training=True)
+        cycled_x = F(fake_y, training=True)
+        cycled_y = G(fake_x, training=True)
         
         # For identity losses 
         same_x   = F(X, training=True)
