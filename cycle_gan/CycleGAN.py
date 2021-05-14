@@ -134,6 +134,7 @@ print(D_y.summary())
 bce = BinaryCrossentropy(from_logits=True)
 LAMBDA = 10.0 # scale factor for cycle consistency and identity loss functions
 
+### Need to add gradient penalty ###
 def generator_loss(D_fake, wgan=False):
     ones = tf.ones_like(D_fake, dtype=tf.float32)
     loss = bce(ones, D_fake)
@@ -244,7 +245,7 @@ def train(datasetX, datasetY):
 
         for X, Y in tf.data.Dataset.zip((datasetX, datasetY)):
             batch_id += 1
-            g_loss, f_loss, x_loss, y_loss = train_step(X, Y)
+            g_loss, f_loss, x_loss, y_loss = train_step(X, Y, wgan=False)
             g_losses.append(g_loss)
             f_losses.append(f_loss)
             x_losses.append(x_loss)
