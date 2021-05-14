@@ -134,19 +134,23 @@ print(D_y.summary())
 bce = BinaryCrossentropy(from_logits=True)
 LAMBDA = 10.0 # scale factor for cycle consistency and identity loss functions
 
-def generator_loss(D_fake):
+def generator_loss(D_fake, wgan=False):
     ones = tf.ones_like(D_fake, dtype=tf.float32)
     loss = bce(ones, D_fake)
+
+    if(wgan) : loss = -tf.reduce_mean(D_fake)
     
     return loss
 
-def discriminator_loss(D_real, D_fake):
+def discriminator_loss(D_real, D_fake, wgan=False):
     ones = tf.ones_like(D_real, dtype=tf.float32)
     zeros = tf.zeros_like(D_fake, dtype=tf.float32)
     
     real_loss = bce(ones, D_real)
     fake_loss = bce(zeros, D_fake)
     loss = real_loss + fake_loss
+
+    if(wgan) : loss = tf.reduce_mean(D_fake) - tf.reduce_mean(D_real)
     
     return loss * 0.5
 
@@ -169,7 +173,7 @@ x_opt = Adam(lr=lr, beta_1=0.5)
 y_opt = Adam(lr=lr, beta_1=0.5)
 
 @tf.function
-def train_step(X, Y):
+def train_step(X, Y, wgan=True):
     ### F : Y -> X, G : X -> Y ###
     ### X : separate X and F(Y), Y : separate Y and G(X) ###
     with tf.GradientTape(persistent=True) as tape:
@@ -191,8 +195,8 @@ def train_step(X, Y):
         D_Y_fake = D_y(fake_y, training=True)
         
         # Training generators
-        bce_g = generator_loss(D_Y_fake)
-        bce_f = generator_loss(D_X_fake)
+        bce_g = generator_loss(D_Y_fake, wgan=wgan)
+        bce_f = generator_loss(D_X_fake, wgan=wgan)
         
         total_cycle_loss = cycle_consistency_loss(cycled_x, X) + cycle_consistency_loss(cycled_y, Y)
         
@@ -203,8 +207,8 @@ def train_step(X, Y):
         total_loss_f = bce_f + total_cycle_loss + identity_f
         
         # Training discriminators 
-        total_loss_Dx = discriminator_loss(D_X_real, D_X_fake)
-        total_loss_Dy = discriminator_loss(D_Y_real, D_Y_fake)
+        total_loss_Dx = discriminator_loss(D_X_real, D_X_fake, wgan=wgan)
+        total_loss_Dy = discriminator_loss(D_Y_real, D_Y_fake, wgan=wgan)
         
     # Calculate gradients 
     grad_g = tape.gradient(total_loss_g, G.trainable_variables)
